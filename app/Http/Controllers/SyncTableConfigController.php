@@ -27,12 +27,30 @@ class SyncTableConfigController extends Controller
 
             foreach ($configs as $config) {
                 $syncData = $syncControlData->firstWhere('sync_table_config_id', $config->id);
-                if ($syncData !== null) {  
-                    $data[] = array_merge($config->toArray(), [
-                        'sync_table_config_id' => $config->id,
-                        'success' => $syncData['success']
-                    ]);
+
+                $configData = [
+                    'id'                => $config->id,
+                    'oracle_name'       => $config->oracle_name,
+                    'mysql_name'        => $config->mysql_name,
+                    'active'            => $config->active,
+                    'created_at'        => $config->created_at,
+                    'updated_at'        => $config->updated_at,
+                    'deleted_at'        => $config->deleted_at,
+                    'field_check_name'  => $config->field_check_name,
+                    'uniq_fields_name'  => $config->uniq_fields_name,
+                ];
+
+                if ($syncData) {
+                    $configData['sync_table_config_id'] = $syncData['sync_table_config_id'];
+                    $configData['success'] = $syncData['success'];
+                } else {
+                    $configData['sync_control_data'] = 0;
                 }
+
+                $data[] = [
+                    'sync_table_config_id' => $config->id,
+                    'config_data' => $configData
+                ];
             }
 
             return response()->json([
@@ -46,7 +64,6 @@ class SyncTableConfigController extends Controller
             ], 500);
         }
     }
-
 
     public function show($id) 
     {
