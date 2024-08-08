@@ -20,3 +20,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::resource('sync-table-config', App\Http\Controllers\SyncTableConfigController::class);
 Route::resource('sync-table-time', App\Http\Controllers\SyncTimeConfigController::class);
+
+Route::get('sync-control/consulting-execute/', [App\Http\Controllers\SyncControlController::class, 'consultingExecute']);
+

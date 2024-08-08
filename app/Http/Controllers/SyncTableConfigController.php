@@ -12,24 +12,46 @@ class SyncTableConfigController extends Controller
     public function index() 
     {
         try {
-            $return = SyncTableConfig::whereNull('deleted_at')->get();
+            $configs = SyncTableConfig::whereNull('deleted_at')->get();
 
-            if(!$return) {
+            if ($configs->isEmpty()) {
                 return response()->json([
                     'status' => 0,
-                    'mesasage' => 'No records found.'
-                ],204);
+                    'message' => 'No records found.'
+                ], 204);
             }
+
+            $response = app(SyncControlController::class)->consultingExecute();
+            $responseData = json_decode($response->getContent(), true);
+
+            if ($responseData['status'] != 1) {
+                return response()->json([
+                    'status' => 0,
+                    'message' => 'Error while retrieving sync control data.'
+                ], 500);
+            }
+
+            $syncControlData = collect($responseData['data']);
+            $data = [];
+
+            foreach ($configs as $config) {
+                $syncData = $syncControlData->firstWhere('sync_table_config_id', $config->id);
+                $data[] = [
+                    'sync_table_config_id' => $config->id,
+                    'config_data' => $config,
+                    'sync_control_data' => $syncData
+                ];
+            }
+
             return response()->json([
-                'status' => 1,
-                'data' => $return
-            ],200);
+                'data' => $data
+            ], 200);
         } 
         catch (\Exception $e) {
             return response()->json([
                 'status' => 0,
-                'message' => 'Erro has been occurred' . $e->getMessage()
-            ],500);
+                'message' => 'An error has occurred: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -69,7 +91,9 @@ class SyncTableConfigController extends Controller
     {
         try {
             $syncTableConfig = SyncTableConfig::create($request->validated());
-    
+            $syncTableConfig->active = 1;
+            $syncTableConfig->save();
+            
             if ($syncTableConfig && $syncTableConfig->id) {
                 return response()->json([
                     'status' => 1,

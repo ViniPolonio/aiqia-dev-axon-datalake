@@ -16,12 +16,14 @@ class SyncTimeConfig extends Model
 
     protected $fillable = [
         'id',
-        'type',
-        'value',
+        'interval_type',
+        'interval_value',
         'sync_table_config_id',
         'active',
         'created_at',
         'updated_at',
-        'deleted_at'
+        'deleted_at',
+        'data_type',
+        'data_value'
     ];
 }
