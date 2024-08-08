@@ -22,25 +22,17 @@ class SyncTableConfigController extends Controller
             }
 
             $response = app(SyncControlController::class)->consultingExecute();
-            $responseData = json_decode($response->getContent(), true);
-
-            if ($responseData['status'] != 1) {
-                return response()->json([
-                    'status' => 0,
-                    'message' => 'Error while retrieving sync control data.'
-                ], 500);
-            }
-
-            $syncControlData = collect($responseData['data']);
+            $syncControlData = collect($response);
             $data = [];
 
             foreach ($configs as $config) {
                 $syncData = $syncControlData->firstWhere('sync_table_config_id', $config->id);
-                $data[] = [
-                    'sync_table_config_id' => $config->id,
-                    'config_data' => $config,
-                    'sync_control_data' => $syncData
-                ];
+                if ($syncData !== null) {  
+                    $data[] = array_merge($config->toArray(), [
+                        'sync_table_config_id' => $config->id,
+                        'success' => $syncData['success']
+                    ]);
+                }
             }
 
             return response()->json([
@@ -54,6 +46,7 @@ class SyncTableConfigController extends Controller
             ], 500);
         }
     }
+
 
     public function show($id) 
     {

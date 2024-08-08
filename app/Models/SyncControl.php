@@ -28,7 +28,6 @@ class SyncControl extends Model
         'end_batch_date',
         'sync_table_config_id',
         'sync_time_config_id',
-        
     ];
 
 }

@@ -22,8 +22,8 @@ class SyncTimeConfigCreateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'type'                  => 'bail|required|integer',
-            'value'                 => 'bail|required|integer',
+            'interval_type'         => 'bail|required|integer',
+            'interval_value'        => 'bail|required|integer',
             'sync_table_config_id'  => 'bail|required',
             'active'                => 'bail|required|integer', 
         ];
@@ -32,6 +32,12 @@ class SyncTimeConfigCreateRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'interval_type.required'    => 'The interval_type is required',
+            'interval_type.integer'     => 'The interval_type is required',
+
+            'interval_value.required'   => 'The interval value is required',
+            'interval_value.integer'    => 'The interval value is required',
+            
             'oracle_name.required'        => 'The Oracle name is required.',
             'oracle_name.integer'         => 'The Oracle name must be an integer.',
 

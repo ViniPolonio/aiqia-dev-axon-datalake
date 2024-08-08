@@ -18,13 +18,10 @@ class SyncControlController extends Controller
                     $join->on('sync_control.sync_table_config_id', '=', 'sub.sync_table_config_id')
                         ->on('sync_control.finished_at', '=', 'sub.latest_finished_at');
                 })
-                ->select('sync_control.sync_table_config_id', 'sync_control.success', 'sync_control.finished_at')
+                ->select('sync_control.sync_table_config_id', 'sync_control.success')
                 ->get();
 
-            return response()->json([
-                'status' => 1, 
-                'data' => $successRecords
-            ], 200);
+            return $successRecords;
         } 
         catch (\Exception $e) {
             return response()->json([
@@ -33,4 +30,5 @@ class SyncControlController extends Controller
             ], 500);
         }
     }
+
 }
