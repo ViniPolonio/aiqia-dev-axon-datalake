@@ -45,6 +45,7 @@ class SyncTableConfigController extends Controller
                     $configData['success'] = $syncData['success'];
                     $status = 1;
                 } else {
+                    //Status = 2 quando o card está vazio. não foi rodado ainda...
                     $configData['sync_control_data'] = 0;
                     $status = 2;
                 }
