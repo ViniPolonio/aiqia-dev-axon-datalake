@@ -43,18 +43,22 @@ class SyncTableConfigController extends Controller
                 if ($syncData) {
                     $configData['sync_table_config_id'] = $syncData['sync_table_config_id'];
                     $configData['success'] = $syncData['success'];
+                    $status = 1;
                 } else {
                     $configData['sync_control_data'] = 0;
+                    $status = 2;
                 }
 
                 $data[] = [
+                    'status'    => $status,
                     'sync_table_config_id' => $config->id,
-                    'config_data' => $configData
+                    'config_data' => $configData,
                 ];
             }
 
             return response()->json([
-                'data' => $data
+                'status'    => $status,
+                'data'      => $data
             ], 200);
         } 
         catch (\Exception $e) {
