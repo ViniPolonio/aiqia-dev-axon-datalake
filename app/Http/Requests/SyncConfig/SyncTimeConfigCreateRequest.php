@@ -25,7 +25,7 @@ class SyncTimeConfigCreateRequest extends FormRequest
             'interval_type'         => 'bail|required|integer',
             'interval_value'        => 'bail|required|integer',
             'sync_table_config_id'  => 'bail|required',
-            'active'                => 'bail|required|integer', 
+            'active'                => 'bail|integer', 
         ];
     }
 
@@ -54,7 +54,6 @@ class SyncTimeConfigCreateRequest extends FormRequest
             'uniq_fields_name.required'   => 'The unique fields name is required.',
             'uniq_fields_name.integer'    => 'The unique fields name must be an integer.',
             
-            'active.required'             => 'The active status is required.',
             'active.integer'              => 'The active status must be an integer.',
         ];
     }
