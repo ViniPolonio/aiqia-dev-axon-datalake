@@ -25,7 +25,9 @@ class SyncTimeConfigCreateRequest extends FormRequest
             'interval_type'         => 'bail|required|integer',
             'interval_value'        => 'bail|required|integer',
             'sync_table_config_id'  => 'bail|required',
-            'active'                => 'bail|integer', 
+            'active'                => 'bail|integer',
+            'data_type'             => 'bail|required',
+            'data_value'            => 'bail|required',
         ];
     }
 
@@ -38,23 +40,11 @@ class SyncTimeConfigCreateRequest extends FormRequest
             'interval_value.required'   => 'The interval value is required',
             'interval_value.integer'    => 'The interval value is required',
             
-            'oracle_name.required'        => 'The Oracle name is required.',
-            'oracle_name.integer'         => 'The Oracle name must be an integer.',
-
-            'mysql_name.required'         => 'The MySQL name is required.',
-            'mysql_name.integer'          => 'The MySQL name must be an integer.',
-            
-            'field_check_name.required'   => 'The field check name is required.',
-            'field_check_name.integer'    => 'The field check name must be an integer.',
-            
             'sync_table_config_id.required' => 'The sync table config ID field is required.',
+            'sync_table_config_id.exists'   => 'The sync table config id is not exists',
 
-            'sync_table_config_id.exists'   => 'The syc table config id is not exists',
-
-            'uniq_fields_name.required'   => 'The unique fields name is required.',
-            'uniq_fields_name.integer'    => 'The unique fields name must be an integer.',
-            
-            'active.integer'              => 'The active status must be an integer.',
+            'data_type.required'            => 'The data_type is required',
+            'data_value.required'           => 'The data_value is required',
         ];
     }
 }
