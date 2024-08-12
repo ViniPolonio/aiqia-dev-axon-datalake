@@ -184,5 +184,4 @@ class SyncTimeConfigController extends Controller
             ], 500);
         }
     }
-    
 }
