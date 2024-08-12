@@ -31,4 +31,28 @@ class SyncControlController extends Controller
         }
     }
 
+    public function show($id)
+    {
+        try {
+            $records = SyncControl::where('sync_table_config_id', '=', $id)->get();
+
+            if ($records->isEmpty()) {
+                return response()->json([
+                    'status' => 0,
+                    'message' => 'This control has no records.'
+                ], 404);
+            }
+
+            return response()->json([
+                'status' => 1,
+                'data' => $records
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 0,
+                'message' => 'An error has occurred: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
