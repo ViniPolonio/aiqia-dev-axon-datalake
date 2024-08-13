@@ -118,7 +118,7 @@ class SyncTimeConfigController extends Controller
                 ], 404); 
             }
 
-            $syncTimeConfig = SyncTimeConfig::find($id);
+            $syncTimeConfig = SyncTimeConfig::findOrFail($id);
 
             if (!$syncTimeConfig) {
                 return response()->json([
@@ -129,17 +129,17 @@ class SyncTimeConfigController extends Controller
 
             $updated = $syncTimeConfig->update($request->validated());
 
-            if ($updated->updated) {
+            if ($updated) {
                 return response()->json([
                     'status'   => 1,
                     'message'  => "Operation success",
-                    'data'     => $updated
+                    'data'     => $syncTimeConfig 
                 ], 200);
             } else {
                 return response()->json([
                     'status'   => 0,
-                    'message'  => "Error the operation",
-                ], 404);
+                    'message'  => "Error during the operation",
+                ], 500);
             }
         } 
         catch (\Exception $e) {
@@ -149,6 +149,7 @@ class SyncTimeConfigController extends Controller
             ], 500); 
         }
     }
+
 
     public function destroy($id) 
     {
