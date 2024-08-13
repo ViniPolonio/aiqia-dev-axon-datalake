@@ -129,17 +129,17 @@ class SyncTimeConfigController extends Controller
 
             $updated = $syncTimeConfig->update($request->validated());
 
-            if ($updated) {
+            if ($updated->updated) {
                 return response()->json([
-                    'status' => 1,
-                    'message' => 'Record updated successfully.',
-                    'data' => $syncTimeConfig
+                    'status'   => 1,
+                    'message'  => "Operation success",
+                    'data'     => $updated
                 ], 200);
             } else {
                 return response()->json([
-                    'status' => 0,
-                    'message' => 'Failed to update record.'
-                ], 500);
+                    'status'   => 0,
+                    'message'  => "Error the operation",
+                ], 404);
             }
         } 
         catch (\Exception $e) {

@@ -129,39 +129,38 @@ class SyncTableConfigController extends Controller
     public function update(SyncTableConfigUpdateRequest $request, $id) 
     {
         try {
-            if (empty($id)) {
+            if (!is_numeric($id)) {
                 return response()->json([
-                    'status' => 0,
-                    'message' => 'ID is required.'
-                ], 400); 
-            }
-            
-            $syncTableConfig = SyncTableConfig::find($id);
-
-            if (!$syncTableConfig) {
-                return response()->json([
-                    'status' => 0,
-                    'message' => 'Record not found.'
-                ], 404); 
+                    'status'   => 0,
+                    'message'  => "The ID number is not valid"
+                ], 400);
             }
 
-            $syncTableConfig->update($request->validated());
+            $response = SyncTableConfig::findOrFail($id);
 
-            return response()->json([
-                'status' => 1,
-                'message' => 'Record updated successfully.',
-                'data' => $syncTableConfig
+            $response->update($request->validated());
+
+            if ($response->updated) {
+                    return response()->json([
+                'status'   => 1,
+                'message'  => "Operation success",
+                'data'     => $response
             ], 200);
-
+            } 
+            else {
+                return response()->json([
+                    'status'   => 0,
+                    'message'  => "Error the operation",
+                ], 404);
+            }
         } catch (\Exception $e) {
+            // Tratamento de outros erros
             return response()->json([
                 'status' => 0,
                 'message' => 'An error has occurred: ' . $e->getMessage()
             ], 500);
         }
     }
-
-
 
     public function destroy($id) 
     {
