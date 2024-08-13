@@ -135,29 +135,33 @@ class SyncTableConfigController extends Controller
                     'message' => 'ID is required.'
                 ], 400); 
             }
-    
-            $updated = SyncTableConfig::where('id', $id)
-                ->update($request->validated());
+            
+            $syncTableConfig = SyncTableConfig::find($id);
 
-            if ($updated) {
-                return response()->json([
-                    'status' => 1,
-                    'message' => 'Record updated successfully.'
-                ], 200);
-            } else {
+            if (!$syncTableConfig) {
                 return response()->json([
                     'status' => 0,
-                    'message' => 'No records found to update.'
-                ], 404);
+                    'message' => 'Record not found.'
+                ], 404); 
             }
-        } 
-        catch (\Exception $e) {
+
+            $syncTableConfig->update($request->validated());
+
+            return response()->json([
+                'status' => 1,
+                'message' => 'Record updated successfully.',
+                'data' => $syncTableConfig
+            ], 200);
+
+        } catch (\Exception $e) {
             return response()->json([
                 'status' => 0,
                 'message' => 'An error has occurred: ' . $e->getMessage()
             ], 500);
         }
     }
+
+
 
     public function destroy($id) 
     {
