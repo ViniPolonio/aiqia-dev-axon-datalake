@@ -43,7 +43,7 @@ class SyncTimeConfigController extends Controller
                     'message' => 'ID is required.'
                 ], 400); 
             }
-            $return = SyncTimeConfig::find($id);
+            $return = SyncTimeConfig::where('sync_table_config_id', '=', $id)->get();
 
             if(!$return) {
                 return response()->json([
