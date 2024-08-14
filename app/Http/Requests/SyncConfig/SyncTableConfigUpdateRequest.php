@@ -26,7 +26,7 @@ class SyncTableConfigUpdateRequest extends FormRequest
             'mysql_name'        => 'required|bail|string|max:255',
             'field_check_name'  => 'required|bail|string|max:255',
             'uniq_fields_name'  => 'required|bail|string|max:255',
-            'active'            => 'required|bail|integer',
+            'active'            => 'bail|integer',
         ];
     }
 
