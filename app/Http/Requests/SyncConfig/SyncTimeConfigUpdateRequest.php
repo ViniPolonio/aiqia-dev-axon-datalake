@@ -22,22 +22,26 @@ class SyncTimeConfigUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'type'                  => 'bail|integer|max:255',
-            'value'                 => 'bail|integer|max:255',
+            'data_type'             => 'bail|integer|max:255',
+            'data_value'            => 'bail|integer|max:255',
             'sync_table_config_id'  => 'bail|required', 
-            'active'                => 'bail|integer', 
+            'active'                => 'bail|integer',
+            'interval_type'         => 'bail|integer',
+            'interval_value'        => 'bail|integer',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'type.integer'      => 'The type field must be a string.',
-            'type.max'          => 'The type field may not be greater than 255 characters.',
-            'value.integer'     => 'The value field must be a string.',
-            'value.max'         => 'The value field may not be greater than 255 characters.',
+            'data_type.integer'             => 'The type field must be a string.',
+            'data_type.max'                 => 'The type field may not be greater than 255 characters.',
+            'data_value.integer'            => 'The value field must be a string.',
+            'data_value.max'                => 'The value field may not be greater than 255 characters.',
             'sync_table_config_id.required' => 'The sync table config ID field is required.',
             'active.integer'                => 'The active status field must be integer.',
+            'interval_type.integer'         => 'The interval_type must be a integer',
+            'interval_value.integer'        => 'The interval_value must be a integer',
         ];
     }
 }

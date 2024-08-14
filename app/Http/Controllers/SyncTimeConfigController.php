@@ -99,7 +99,7 @@ class SyncTimeConfigController extends Controller
         }
     }
 
-    public function update(SyncTimeConfigUpdateRequest $request, $id) 
+    public function update(SyncTimeConfigUpdateRequest $request, $id)
     {
         try {
             $syncTableConfig = SyncTableConfig::find($request->input('sync_table_config_id'));
@@ -108,14 +108,14 @@ class SyncTimeConfigController extends Controller
                 return response()->json([
                     'status' => 0,
                     'message' => 'ID is required.'
-                ], 400); 
+                ], 400);
             }
 
             if (!$syncTableConfig) {
                 return response()->json([
                     'status' => 0,
                     'message' => 'Sync table config ID does not exist.'
-                ], 404); 
+                ], 404);
             }
 
             $syncTimeConfig = SyncTimeConfig::findOrFail($id);
@@ -124,7 +124,7 @@ class SyncTimeConfigController extends Controller
                 return response()->json([
                     'status' => 0,
                     'message' => 'Sync time config ID not found.'
-                ], 404); 
+                ], 404);
             }
 
             $updated = $syncTimeConfig->update($request->validated());
@@ -133,7 +133,7 @@ class SyncTimeConfigController extends Controller
                 return response()->json([
                     'status'   => 1,
                     'message'  => "Operation success",
-                    'data'     => $syncTimeConfig 
+                    'data'     => $syncTimeConfig
                 ], 200);
             } else {
                 return response()->json([
@@ -141,14 +141,14 @@ class SyncTimeConfigController extends Controller
                     'message'  => "Error during the operation",
                 ], 500);
             }
-        } 
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             return response()->json([
                 'status' => 0,
                 'message' => 'An error has occurred: ' . $e->getMessage()
-            ], 500); 
+            ], 500);
         }
     }
+
 
 
     public function destroy($id) 
