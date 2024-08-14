@@ -22,11 +22,11 @@ class SyncTableConfigUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'oracle_name'       => 'bail|string|max:255',
-            'mysql_name'        => 'bail|string|max:255',
-            'field_check_name'  => 'bail|string|max:255',
-            'uniq_fields_name'  => 'bail|string|max:255',
-            'active'            => 'bail|integer',
+            'oracle_name'       => 'required|bail|string|max:255',
+            'mysql_name'        => 'required|bail|string|max:255',
+            'field_check_name'  => 'required|bail|string|max:255',
+            'uniq_fields_name'  => 'required|bail|string|max:255',
+            'active'            => 'required|bail|integer',
         ];
     }
 

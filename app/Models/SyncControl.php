@@ -8,8 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SyncControl extends Model
 {
-    use HasFactory;
-
+    use HasFactory, SoftDeletes;
 
     protected $connection = 'mysql';
 

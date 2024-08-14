@@ -127,40 +127,42 @@ class SyncTableConfigController extends Controller
     }
 
     public function update(SyncTableConfigUpdateRequest $request, $id) 
-    {
-        try {
-            if (!is_numeric($id)) {
-                return response()->json([
-                    'status'   => 0,
-                    'message'  => "The ID number is not valid"
-                ], 400);
-            }
+{
+    try {
+        if (!is_numeric($id)) {
+            return response()->json([
+                'status'   => 0,
+                'message'  => "The ID number is not valid"
+            ], 400);
+        }
+        
+        // Encontrar o registro ou lançar uma exceção se não for encontrado
+        $syncTableConfig = SyncTableConfig::findOrFail($id);
 
-            $response = SyncTableConfig::findOrFail($id);
+        // Atualizar o registro com os dados validados
+        $updateSuccessful = $syncTableConfig->update($request->validated());
 
-            $response->update($request->validated());
-
-            if ($response->updated) {
-                    return response()->json([
+        if ($updateSuccessful) {
+            return response()->json([
                 'status'   => 1,
                 'message'  => "Operation success",
-                'data'     => $response
+                'data'     => $syncTableConfig
             ], 200);
-            } 
-            else {
-                return response()->json([
-                    'status'   => 0,
-                    'message'  => "Error the operation",
-                ], 404);
-            }
-        } catch (\Exception $e) {
-            // Tratamento de outros erros
+        } else {
             return response()->json([
-                'status' => 0,
-                'message' => 'An error has occurred: ' . $e->getMessage()
+                'status'   => 0,
+                'message'  => "Error during the operation",
             ], 500);
         }
+    } catch (\Exception $e) {
+        // Tratamento de outros erros
+        return response()->json([
+            'status' => 0,
+            'message' => 'An error has occurred: ' . $e->getMessage()
+        ], 500);
     }
+}
+
 
     public function destroy($id) 
     {
