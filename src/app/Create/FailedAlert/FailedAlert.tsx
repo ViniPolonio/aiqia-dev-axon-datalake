@@ -8,11 +8,13 @@ import {
 
 interface FailedAlertProps {
     type: string,
+    erro?: string,
     
 }
 
 export function FailedAlert({
     type,
+    erro
 }: FailedAlertProps) 
 {
   return (

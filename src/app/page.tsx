@@ -16,7 +16,7 @@ export type Data = {
   active: number;
   status: number;
   created_at: Date;
-  updated_at: Date;
+  finished_at: Date;
 }
 export default function Home() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -27,7 +27,16 @@ export default function Home() {
     const fetchData = async () => {
       try {
         const result = await getAllConfigsTable();
-        setData(result.data)
+        const configTables = result.data.map((item: any) => ({
+          id: item.config_data.id,
+          oracle_name: item.config_data.oracle_name,
+          mysql_name: item.config_data.mysql_name,
+          active: item.config_data.active,
+          status: item.config_data.success, 
+          created_at: new Date(item.config_data.created_at),
+          finished_at: new Date(item.config_data.finished_at),
+      }));
+        setData(configTables)
       } catch (error) {
         console.error(error);
       } finally {
@@ -73,7 +82,7 @@ export default function Home() {
             <div key={item.id} className="p-5 flex-grow-0">
               <CardWithData
                 id={item.id}
-                date={item.updated_at}
+                date={item.status == 2 ? item.created_at : item.finished_at}
                 active={item.active}
                 status={item.status}
                 nomeOracle={item.oracle_name}

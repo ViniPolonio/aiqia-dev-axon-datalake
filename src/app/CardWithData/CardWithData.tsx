@@ -1,3 +1,5 @@
+
+
 import * as React from "react"
 
 import { Button } from "@/components/ui/button"
@@ -30,12 +32,18 @@ export function CardWithData({
   nomeOracle, 
   nomeInterno, 
   date, 
-  status,
-  active,
+  status = 2,
+  active: initialActive,
   showButton = true,
   loading = false,
   }: CardWithDataProps)
   {
+    const [active, setActive] = React.useState(initialActive);
+
+    React.useEffect(() => {
+      setActive(initialActive); // Garantir que o estado inicial esteja correto
+    }, [initialActive]);
+
     const router = useRouter();
     const formateDate = format(date, 'dd/MM/yyyy HH:mm:ss')
     if (loading) {
@@ -59,30 +67,37 @@ export function CardWithData({
         </Card>
       );
     }
-    const cardClass = 
-    showButton ? (
-      status === 0 ? "w-[350px] h-[290px] animation_failed" 
-      : status === 1 ? "w-[350px] h-[290px] animation_success" 
-      : "w-[350px] h-[290px] animation_default"
-    ) : (
-      status === 0 ? " w-[350px] h-[220px] animation_failed" 
-      : status === 1 ? "w-[350px] h-[220px] animation_success" 
-      : "w-[350px] h-[220px] animation_default"
-    )
-    const titlesClass = 
-            status === 0 ? "text-red-500 truncate" 
-            : status === 1 ? "text-green-500 truncate" 
-            : "text-gray-600 truncate"
-    const statusClass = 
-            status === 0 ? "text-center text-balance text-red-500" 
-            : status === 1 ? "text-center text-balance text-green-500" 
-            : "text-center text-balance text-gray-600"
+    const cardClass = active === 0
+      ? "w-[350px] h-[290px] animation_default"
 
-    const buttonClass = 
-    status === 0 ? " transition-colors duration-700 hover:bg-red-500  " 
-    : status === 1 ? "transition-colors duration-700 hover:bg-green-500" 
-    : "bg-gray-600 transition-colors duration-700 hover:bg-gray-500"
+      : ( showButton ? (
+            status === 0 ? "w-[350px] h-[290px] animation_failed" 
+            : status === 1 ? "w-[350px] h-[290px] animation_success" 
+            : "w-[350px] h-[290px] animation_unsyncronized"
+          ) : (
+            status === 0 ? " w-[350px] h-[220px] animation_failed" 
+            : status === 1 ? "w-[350px] h-[220px] animation_success" 
+            : "w-[350px] h-[220px] animation_unsyncronized"
+          ))
+    const titlesClass = active === 0 
+            ? "text-gray-600 truncate"
+            : (status === 0 ? "text-red-500 truncate" 
+                : status === 1 ? "text-green-500 truncate" 
+                : "text-yellow-600 truncate"
+            )
+    const statusClass = active === 0 
+            ? "text-center text-balance text-gray-600"
+            : (status === 0 ? "text-center text-balance text-red-500" 
+              : status === 1 ? "text-center text-balance text-green-500" 
+              : "text-center text-balance text-yellow-600"
+            )
 
+    const buttonClass = active === 0
+            ? "bg-gray-600 transition-colors duration-700 hover:bg-gray-500"
+            : (status === 0 ? " transition-colors duration-700 hover:bg-red-500  " 
+              : status === 1 ? "transition-colors duration-700 hover:bg-green-500" 
+              : "transition-colors duration-700 hover:bg-yellow-500"
+            )
     const handleHistoric = () => {
       router.push(`/historic/${id}`);
     }
@@ -94,19 +109,42 @@ export function CardWithData({
         </CardHeader>
         <CardContent className="">
           <div>
-            <CardDescription className="pb-2">Ultima Atulização:</CardDescription>
+            <CardDescription className="pb-2">{status == 2 ? "Criado em: " : "Ultima Atulização: "}</CardDescription>
             <h1 className="text-center text-balance truncate"> {formateDate}</h1>
           </div>
           <div>
             <CardDescription>Status:</CardDescription>
-            <h1 className={`${statusClass}`}>{status === 0 ? "Failed" : "Success"}</h1>
+            <h1 className={`${statusClass}`}>{
+              (() => {
+                if (active === 1){
+                  switch (status) {
+                    case 0:
+                      return "Failed";
+                    case 1:
+                      return "Success";
+                    default:
+                      return "Unsyncronized";
+                  }
+              }
+              else{
+                return "Inactive";
+              }
+              })()
+            }
+            </h1>
           </div>
         </CardContent>
         {showButton && (
           <CardFooter className="flex place-content-evenly">
-            <EditButton/>
+            <EditButton
+              id={ id }
+            />
             <Button onClick={handleHistoric} className={`${buttonClass}`}>See more</Button>
-            <PowerButton/>
+            <PowerButton 
+              active={active}
+              id = {id}
+              onPowerChange={setActive}
+            />
           </CardFooter>
         )}
         

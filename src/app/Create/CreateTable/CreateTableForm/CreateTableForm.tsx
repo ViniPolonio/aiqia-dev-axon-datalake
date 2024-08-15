@@ -39,8 +39,7 @@ export function CreateTableForm() {
         setIsSubmitting(true)
         try{
             const response = await storeConfigTable(values);
-            
-            if(response && response.success){
+            if(response && response.status == 1){
               setOracleName(values.oracle_name);
               setSuccessCreated(true);
               setFailedCreated(false);
@@ -71,12 +70,12 @@ export function CreateTableForm() {
           name="oracle_name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nome Oracle</FormLabel>
+              <FormLabel>Tabela Oracle</FormLabel>
               <FormControl>
-                <Input placeholder="Nome do oracle" {...field} />
+                <Input placeholder="Tabela do oracle" {...field} />
               </FormControl>
               <FormDescription>
-                Nome salvo no banco de dados da oracle
+                Nome da tabela salvo no banco de dados da oracle
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -87,12 +86,12 @@ export function CreateTableForm() {
           name="mysql_name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nome Mysql</FormLabel>
+              <FormLabel>Tabela Mysql</FormLabel>
               <FormControl>
-                <Input placeholder="Nome do Mysql" {...field} />
+                <Input placeholder="Tabela do Mysql" {...field} />
               </FormControl>
               <FormDescription>
-                Nome salvo no banco de dados interno do mysql
+                Nome da tabela salvo no banco de dados interno do mysql
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -103,12 +102,12 @@ export function CreateTableForm() {
           name="field_check_name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nome de verificacao</FormLabel>
+              <FormLabel>Campo de verificacao</FormLabel>
               <FormControl>
-                <Input placeholder="Nome de verificacao" {...field} />
+                <Input placeholder="Campo de verificacao" {...field} />
               </FormControl>
               <FormDescription>
-                Nome do campo de verificacao
+                Insira o campo de verificacao
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -119,12 +118,12 @@ export function CreateTableForm() {
           name="uniq_fields_name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nome do Campo Unico</FormLabel>
+              <FormLabel>Chave Primaria</FormLabel>
               <FormControl>
-                <Input placeholder="Nome Campo Unico" {...field} />
+                <Input placeholder="Chave Primaria" {...field} />
               </FormControl>
               <FormDescription>
-                Nome Campo Unico
+                Campo para inserir a chave primaria
               </FormDescription>
               <FormMessage />
             </FormItem>

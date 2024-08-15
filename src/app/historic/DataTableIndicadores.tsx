@@ -14,10 +14,9 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
+import { ArrowUpDown, MoreHorizontal } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -27,7 +26,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
 import {
   Table,
   TableBody,
@@ -37,147 +35,130 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { CardWithData } from "../CardWithData/CardWithData"
+import { getConfigTableById } from "../services/configurationTable"
+import { useState } from "react"
+import { getLogsById } from "@/app/services/configurationControl";
+import { format } from "date-fns"
+import { DateRange } from "react-day-picker"
 
-//ajustar para quando tiver o back, eralizar uma request com todos os dados id=table.id
 
-const data: Indicadores[] =  [
-    // Dados para ID 1
-    {
-      id: 1,
-      status: "success",
-      lastUpdate: new Date('2024-07-01T12:00:00Z'), // Corresponde à data do ID 1
-    },
-    {
-      id: 1,
-      status: "success",
-      lastUpdate: new Date('2024-07-02T12:00:00Z'),
-    },
-    {
-      id: 1,
-      status: "failed",
-      lastUpdate: new Date('2024-07-03T12:00:00Z'),
-    },
-    
-    // Dados para ID 2
-    {
-      id: 2,
-      status: "failed",
-      lastUpdate: new Date('2024-07-05T15:30:00Z'), // Corresponde à data do ID 2
-    },
-    {
-      id: 2,
-      status: "success",
-      lastUpdate: new Date('2024-07-06T15:30:00Z'),
-    },
-    {
-      id: 2,
-      status: "success",
-      lastUpdate: new Date('2024-07-07T15:30:00Z'),
-    },
-    
-    // Dados para ID 3
-    {
-      id: 3,
-      status: "success",
-      lastUpdate: new Date('2024-07-10T08:45:00Z'), // Corresponde à data do ID 3
-    },
-    {
-      id: 3,
-      status: "failed",
-      lastUpdate: new Date('2024-07-11T08:45:00Z'),
-    },
-    {
-      id: 3,
-      status: "success",
-      lastUpdate: new Date('2024-07-12T08:45:00Z'),
-    },
-    
-    // Dados para ID 4
-    {
-      id: 4,
-      status: "success",
-      lastUpdate: new Date('2024-07-15T09:00:00Z'), // Corresponde à data do ID 4
-    },
-    {
-      id: 4,
-      status: "failed",
-      lastUpdate: new Date('2024-07-16T09:00:00Z'),
-    },
-    {
-      id: 4,
-      status: "success",
-      lastUpdate: new Date('2024-07-17T09:00:00Z'),
-    },
-    
-    // Dados para ID 5
-    {
-      id: 5,
-      status: "failed",
-      lastUpdate: new Date('2024-07-20T14:30:00Z'), // Corresponde à data do ID 5
-    },
-    {
-      id: 5,
-      status: "success",
-      lastUpdate: new Date('2024-07-21T14:30:00Z'),
-    },
-    {
-      id: 5,
-      status: "success",
-      lastUpdate: new Date('2024-07-22T14:30:00Z'),
-    },
-  ];
+export type Data = {
+  id: number;
+  oracle_name: string;
+  mysql_name: string;
+  active: number;
+  status: number;
+  created_at: Date;
+  finished_at: Date;
+}
+
+export const defaultData: Data = {
+  id: 0,
+  oracle_name: "",
+  mysql_name: "",
+  active: 0,
+  status: 2, 
+  created_at: new Date(),
+  finished_at: new Date(),
+};
+
 
 export type Indicadores = {
   id: number
-  status: "pending" | "processing" | "success" | "failed"
-  lastUpdate: Date
+  runtime_second: number
+  error: string
+  started_at: Date
+  finished_at: Date
+  is_batch_call: "Verdadeiro" | "Falso" //execucao externa 
+  status: "" | "success" | "failed"
+}
+const formatRuntime = (seconds: number) => {
+  if (seconds > 60) {
+    return `${Math.floor(seconds / 60)} minutos`;
+  }
+  return `${seconds} segundos`;
 }
 
 export const columns: ColumnDef<Indicadores>[] = [
   {
     accessorKey: "status",
     header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "desc")}
-          >
-            Status
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        )
-      },
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "desc")}
+        >
+          Status
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
     cell: ({ row }) => {
-        const status = row.getValue("status")
-        const statusClass = 
-            status === "failed" ? "text-red-500" 
-            : status === "success" ? "text-green-500" 
-            : ""
+      const status = row.getValue("status")
+      const statusClass = 
+          status === "failed" ? "text-red-500" 
+          : status === "success" ? "text-green-500" 
+          : ""
 
-        return (
+      return (
         <div className={`capitalize ${statusClass}`}>{row.getValue("status")}</div>
-    )},
+      )
+    },
   },
   {
-    accessorKey: "lastUpdate",
+    accessorKey: "finished_at",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Data da Atualização
+          Data da Sincronização
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
     },
     cell: ({ row }) => {
-        const date = row.getValue("lastUpdate") as Date;
-        const formattedDate = date.toLocaleString(); 
-        return <div className="lowercase">{formattedDate}</div>
+      const date = row.getValue("finished_at") as Date;
+      const formattedDate = format(date, "dd/MM/yyyy HH:mm:ss"); 
+      return <div className="lowercase">{formattedDate}</div>
     },
   },
-
+  {
+    accessorKey: "runtime_second",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "desc")}
+        >
+          Tempo de Execução
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
+    cell: ({ row }) => {
+      const runtime = row.getValue("runtime_second") as number;
+      return <div>{formatRuntime(runtime)}</div>
+    },
+  },
+  {
+    accessorKey: "error",
+    header: () => "Erro",
+    cell: ({ row }) => {
+      const error = row.getValue("error") as string;
+      return <div>{error || "Nenhum erro"}</div>
+    },
+  },
+  {
+    accessorKey: "started_at",
+    header: () => "Início",
+    cell: ({ row }) => {
+      const date = row.getValue("started_at") as Date;
+      const formattedDate = format(date, "dd/MM/yyyy HH:mm:ss");
+      return <div className="lowercase">{formattedDate}</div>
+    },
+  },
   {
     id: "actions",
     enableHiding: false,
@@ -200,12 +181,16 @@ export const columns: ColumnDef<Indicadores>[] = [
               Copiar ID
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(String(indicadores.lastUpdate))}
+              onClick={() => navigator.clipboard.writeText(String(indicadores.finished_at))}
             >
               Copiar Data
             </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => navigator.clipboard.writeText(indicadores.error)}
+            >
+              Copiar Erro
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>(Realizar acao)</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       )
@@ -214,18 +199,23 @@ export const columns: ColumnDef<Indicadores>[] = [
 ]
 
 export default function DataTable() {
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [id, setId] = useState<string | null>(null)
+  const [dataTable, setDataTable] = useState<Data | undefined>();
+  const [logs, setLogs] = useState<Indicadores[]>([])
   const [sorting, setSorting] = React.useState<SortingState>([
-    { id: "lastUpdate", desc: false },
+    { id: "finished_at", desc: true },
   ])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   )
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({})
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
+  const [filteredLogs, setFilteredLogs] = useState<Indicadores[]>([]);
+  const [dateRange, setDateRange] = React.useState<DateRange | undefined>();
 
   const table = useReactTable({
-    data,
+    data: filteredLogs,    
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -243,20 +233,153 @@ export default function DataTable() {
     },
   })
 
+  React.useEffect(() => {
+    const path = window.location.pathname;
+    const extractedId = path.split("/").pop();
+  
+    if (extractedId) {
+      setId(extractedId);
+    } else {
+      console.error("ID não encontrado na URL");
+      return;
+    }
+  
+    const getData = async () => {
+      setIsLoading(true);
+  
+      if (!id) {
+        setIsLoading(false);
+        return;
+      }
+  
+      try {
+        let status = 2; 
+        let indicadoresData: Indicadores[] = [];
+  
+        try {
+          const logsResult = await getLogsById(id);
+          const logs = logsResult.data;
+          
+          indicadoresData = logs.map((log: any) => ({
+            id: log.sync_control_id,
+            status: log.success === 1 ? "success" : "failed",
+            started_at: new Date(log.started_at),
+            finished_at: new Date(log.finished_at),
+            runtime_second: log.runtime_second,
+            error: log.error,
+            is_batch_call: log.is_batch_call === 1 ? "Verdadeiro" : "Falso",
+
+          }));
+          
+          if (logs.length > 0) {
+            status = logs[logs.length - 1].success ? 1 : 0;
+            setLogs(indicadoresData);
+          }
+        } catch (error) {
+          console.error("Erro ao buscar logs:", error);
+        }
+  
+        try {
+          const result = await getConfigTableById(id);
+          const item = result;
+  
+          const configTables: Data = {
+            id: item.data.id,
+            oracle_name: item.data.oracle_name,
+            mysql_name: item.data.mysql_name,
+            active: item.data.active,
+            status: status, 
+            created_at: new Date(item.data.created_at),
+            finished_at: new Date(item.finished_at),
+          };
+          setDataTable(configTables);
+          
+        } catch (error) {
+          console.error("Erro ao buscar a configuração da tabela:", error);
+        }
+      } catch (error) {
+        console.error("Erro ao buscar dados:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+  
+    getData();
+  }, [id]);
+
+  React.useEffect(() => {
+    if (logs.length > 0) {
+      setDateRange({
+        from: logs[0].finished_at,
+        to: logs[logs.length - 1].finished_at
+      });
+    }
+  }, [logs]);
+  
+
+  React.useEffect(() => {
+    if ((dateRange?.from && dateRange?.to) && (dateRange.from != undefined && dateRange.to != undefined)) {
+      const filtered = logs.filter(log => {
+        const finished_at = new Date(log.finished_at)
+        return finished_at >= dateRange.from && finished_at <= dateRange.to
+      })
+      setFilteredLogs(filtered)
+    } else {
+      setFilteredLogs(logs)
+    }
+
+  }, [dateRange, logs])
+  
+  
+  
+  
+
   return (
     <div className="w-2/3">
-        <div className="flex justify-center items-center">
-            <CardWithData 
-                id = {1}
-                date={new Date('2024-07-20T14:30:00Z')}
+        {isLoading ? (
+            <div className="flex justify-center items-center">
+              <CardWithData 
+                loading={true}
+                id={1}
+                date={new Date("01-01-2024 00:00:00")}
+                active={0}
                 status={1}
-                nomeOracle="Teste oraCLE"
-                nomeInterno="Teste inter no"
+                nomeOracle={""}
+                nomeInterno={""} 
+              />
+            </div>
+        ) : ( dataTable? (
+            <div className="flex justify-center items-center">
+              <CardWithData
+                id={dataTable.id}
+                date={dataTable.status == 2 ? dataTable.created_at : dataTable.finished_at}
+                active={dataTable.active}
+                status={dataTable.status}
+                nomeOracle={dataTable.oracle_name}
+                nomeInterno={dataTable.mysql_name}
                 showButton={false}
-                />
-        </div>
+              />
+            </div>) : (
+            <div className="flex justify-center items-center">
+            <CardWithData 
+              loading={true}
+              id={1}
+              date={new Date("01-01-2024 00:00:00")}
+              active={0}
+              status={1}
+              nomeOracle={""}
+              nomeInterno={""} 
+            />
+          </div>
+          )
+        )}
+        
       <div className="flex justify-center items-center py-4">
-        <DatePickerWithRange/>
+      <DatePickerWithRange
+          from={logs.length > 0 ? logs[0].finished_at : undefined}
+          to={logs.length > 0 ? logs[logs.length - 1].finished_at : undefined}
+          onDateChange={setDateRange}
+        />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
           </DropdownMenuTrigger>
@@ -270,9 +393,7 @@ export default function DataTable() {
                     key={column.id}
                     className="capitalize"
                     checked={column.getIsVisible()}
-                    onCheckedChange={(value) =>
-                      column.toggleVisibility(!!value)
-                    }
+                    onCheckedChange={(value) => column.toggleVisibility(!!value)}
                   >
                     {column.id}
                   </DropdownMenuCheckboxItem>
@@ -282,54 +403,60 @@ export default function DataTable() {
         </DropdownMenu>
       </div>
       <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
+        {logs.length === 0 ? (
+          <div className="p-4 text-center text-gray-500">
+            A tabela ainda não foi sincronizada ainda.
+          </div>
+        ) : (
+            <Table>
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => {
+                      return (
+                        <TableHead key={header.id}>
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
+                        </TableHead>
+                      )
+                    })}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows?.length ? (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && "selected"}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
                           )}
-                    </TableHead>
-                  )
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={columns.length}
+                      className="h-24 text-center"
+                    >
+                      No results.
                     </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  No results.
-                </TableCell>
-              </TableRow>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
             )}
-          </TableBody>
-        </Table>
       </div>
       <div className="flex items-center justify-end space-x-2 py-4">
         

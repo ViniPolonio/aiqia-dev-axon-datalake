@@ -16,21 +16,32 @@ import {
 
 interface DatePickerWithRangeProps {
   from?: Date
+  to?: Date
+  className?: string
+  onDateChange?: (range: DateRange) => void;
 }
 
 // Pegar os dados a data e retornar para o dataTable, que vai informar ao backend 
 // quais devem
 export function DatePickerWithRange({
+  from ,
+  to ,
+  onDateChange,
   className,
 
-}: React.HTMLAttributes<HTMLDivElement>, {
-    from = new Date(2022, 0, 20),
 }: DatePickerWithRangeProps) {
   const [date, setDate] = React.useState<DateRange | undefined>({
-    from,
-    to: addDays(new Date().setHours(0, 0, 0, 0), 20),
+    from: from ?? undefined,
+    to: from ?? undefined,
   })
 
+  const handleDateChange = (range: DateRange) => {
+    setDate(range);
+    if (onDateChange) {
+      onDateChange(range);
+    }
+  };
+  
   return (
     <div className={cn("grid gap-2", className)}>
       <Popover>
@@ -64,7 +75,7 @@ export function DatePickerWithRange({
             mode="range"
             defaultMonth={date?.from}
             selected={date}
-            onSelect={setDate}
+            onSelect={handleDateChange}
             numberOfMonths={2}
             
           />

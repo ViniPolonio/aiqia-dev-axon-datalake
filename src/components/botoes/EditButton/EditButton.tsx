@@ -1,4 +1,4 @@
-
+"use client"
 
 import * as React from "react"
 import { PencilIcon, Plus } from "lucide-react"
@@ -11,10 +11,16 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
 
-export function EditButton() {
+interface EditButtonProps{
+  id: number,
+}
+
+export function EditButton({
+  id
+}: EditButtonProps) {
     const router = useRouter();
     const handleEdit = () => {
-        router.push(`/Edit`)
+        router.push(`/edit/${id}`)
     };
     return(
         <Button 

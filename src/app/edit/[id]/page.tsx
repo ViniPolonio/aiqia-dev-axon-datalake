@@ -1,18 +1,18 @@
 "use client"
 
 import ReturnButton from "@/components/botoes/ReturnButton/ReturnButton";
-import DataTableIndicadores from "../DataTableIndicadores";
+import EditForm from "../EditForm";
 
 
-export default function Historic() {
-    
+export default function Edit() {
+
     return (
         <main className="">
             <div>
                 <ReturnButton/>
             </div>
-            <div className="flex  justify-center">
-                <DataTableIndicadores/>
+            <div className="flex justify-center">
+                <EditForm/>
             </div>
         </main>
     );

@@ -77,7 +77,9 @@
 .animation_default {
   @apply shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 duration-500 ease-in-out dark:border-2 dark:hover:border-gray-500 dark:hover:shadow-gray-500/50;
 }
-
+.animation_unsyncronized {
+  @apply shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 duration-500 ease-in-out dark:border-2 dark:hover:border-yellow-500 dark:hover:shadow-yellow-500/50;
+}
 .animation_skeleton {
  @apply shadow-lg bg-gray-200 animate-pulse dark:bg-gray-700 rounded-lg;
 }
