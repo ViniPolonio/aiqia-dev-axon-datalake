@@ -23,3 +23,5 @@ Route::resource('sync-table-time', App\Http\Controllers\SyncTimeConfigController
 
 Route::get('sync-control/consulting-execute/', [App\Http\Controllers\SyncControlController::class, 'consultingExecute']);
 Route::resource('sync-table-control', App\Http\Controllers\SyncControlController::class);
+Route::put('sync-table-config-activeOrDesactive/{id}', [App\Http\Controllers\SyncTableConfigController::class, 'acTiveOrDesactive']);
+

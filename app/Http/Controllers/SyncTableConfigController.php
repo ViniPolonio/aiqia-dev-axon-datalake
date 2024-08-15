@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\SyncConfig\SyncTableConfigCreateRequest;
 use App\Http\Requests\SyncConfig\SyncTableConfigUpdateRequest;
 use App\Models\SyncTableConfig;
-
+use Illuminate\Http\Request;
 class SyncTableConfigController extends Controller
 {
     public function index() 
@@ -127,41 +127,38 @@ class SyncTableConfigController extends Controller
     }
 
     public function update(SyncTableConfigUpdateRequest $request, $id) 
-{
-    try {
-        if (!is_numeric($id)) {
-            return response()->json([
-                'status'   => 0,
-                'message'  => "The ID number is not valid"
-            ], 400);
-        }
-        
-        // Encontrar o registro ou lançar uma exceção se não for encontrado
-        $syncTableConfig = SyncTableConfig::findOrFail($id);
+    {
+        try {
+            if (!is_numeric($id)) {
+                return response()->json([
+                    'status'   => 0,    
+                    'message'  => "The ID number is not valid"
+                ], 400);
+            }
+            
+            $syncTableConfig = SyncTableConfig::findOrFail($id);
 
-        // Atualizar o registro com os dados validados
-        $updateSuccessful = $syncTableConfig->update($request->validated());
+            $updateSuccessful = $syncTableConfig->update($request->validated());
 
-        if ($updateSuccessful) {
+            if ($updateSuccessful) {
+                return response()->json([
+                    'status'   => 1,
+                    'message'  => "Operation success",
+                    'data'     => $syncTableConfig
+                ], 200);
+            } else {
+                return response()->json([
+                    'status'   => 0,
+                    'message'  => "Error during the operation",
+                ], 500);
+            }
+        } catch (\Exception $e) {
             return response()->json([
-                'status'   => 1,
-                'message'  => "Operation success",
-                'data'     => $syncTableConfig
-            ], 200);
-        } else {
-            return response()->json([
-                'status'   => 0,
-                'message'  => "Error during the operation",
+                'status' => 0,
+                'message' => 'An error has occurred: ' . $e->getMessage()
             ], 500);
         }
-    } catch (\Exception $e) {
-        // Tratamento de outros erros
-        return response()->json([
-            'status' => 0,
-            'message' => 'An error has occurred: ' . $e->getMessage()
-        ], 500);
     }
-}
 
 
     public function destroy($id) 
@@ -199,4 +196,48 @@ class SyncTableConfigController extends Controller
             ], 500);
         }
     }
+
+
+    public function acTiveOrDesactive($id, Request $request) {
+        
+        try {
+            $validatedData = $request->validate([
+                'active' => 'required|integer'
+            ]);
+            
+            if (!is_numeric($id)) {
+                return response()->json([
+                    'status'   => 0,    
+                    'message'  => "The ID number is not valid"
+                ], 400);
+            }
+            
+            // Encontrar o registro ou lançar uma exceção se não for encontrado
+            $syncTableConfig = SyncTableConfig::findOrFail($id);
+
+            // Atualizar apenas o campo 'active'
+            $updateSuccessful = $syncTableConfig->update([
+                'active' => $validatedData['active']
+            ]);
+
+            if ($updateSuccessful) {
+                return response()->json([
+                    'status'   => 1,
+                    'message'  => "Operation success",
+                    'data'     => $syncTableConfig
+                ], 200);
+            } else {
+                return response()->json([
+                    'status'   => 0,
+                    'message'  => "Error during the operation",
+                ], 500);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'status'  => 0,
+                'message' => 'Error has occurred: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
 }
