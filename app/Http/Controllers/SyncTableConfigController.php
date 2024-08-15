@@ -30,6 +30,7 @@ class SyncTableConfigController extends Controller
                 if ($syncData) {
                     $configData['sync_table_config_id'] = $syncData['sync_table_config_id'];
                     $configData['success'] = $syncData['success'];
+                    $configData['finished_at'] = $syncData['finished_at'];
                     $success = 1;
                 } else {
                     $success = 2;
@@ -44,16 +45,15 @@ class SyncTableConfigController extends Controller
                     'deleted_at'        => $config->deleted_at,
                     'field_check_name'  => $config->field_check_name,
                     'uniq_fields_name'  => $config->uniq_fields_name,
-                    'success'            => $success, //Registro na tabela SyncControl || 0-Erro | 1-Sucesso | 2-Não possui registro na tabela.
+                    'success'           => $success, //Registro na tabela SyncControl || 0-Erro | 1-Sucesso | 2-Não possui registro na tabela.
+                    'finished_at'       => $configData['finished_at']
                 ];
-
 
                 $data[] = [
                     'sync_table_config_id' => $config->id,
                     'config_data' => $configData,
                 ];
             }
-
             return response()->json([
                 'data'      => $data
             ], 200);
@@ -212,10 +212,8 @@ class SyncTableConfigController extends Controller
                 ], 400);
             }
             
-            // Encontrar o registro ou lançar uma exceção se não for encontrado
             $syncTableConfig = SyncTableConfig::findOrFail($id);
 
-            // Atualizar apenas o campo 'active'
             $updateSuccessful = $syncTableConfig->update([
                 'active' => $validatedData['active']
             ]);
@@ -239,5 +237,4 @@ class SyncTableConfigController extends Controller
             ], 500);
         }
     }
-
 }

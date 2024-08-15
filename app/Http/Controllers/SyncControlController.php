@@ -19,6 +19,7 @@ class SyncControlController extends Controller
                         ->on('sync_control.finished_at', '=', 'sub.latest_finished_at');
                 })
                 ->select('sync_control.sync_table_config_id', 'sync_control.success')
+                ->select('sync_control.sync_table_config_id', 'sync_control.finished_at')
                 ->get();
 
             return $successRecords;
