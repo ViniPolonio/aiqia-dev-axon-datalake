@@ -75,19 +75,23 @@ class SyncTableConfigController extends Controller
                     'message' => 'ID is required.'
                 ], 400); 
             }
-    
+
+            $syncControl = app(SyncControlController::class)->returnShowTableConfig($id);
+            $finishedAt = $syncControl ? $syncControl->finished_at : null;
+
             $return = SyncTableConfig::find($id);
-    
+        
             if (!$return) {
                 return response()->json([
                     'status' => 0,
                     'message' => 'No records found.'
                 ], 404); 
             }
-    
+
             return response()->json([
                 'status' => 1,
-                'data' => $return
+                'data' => $return,
+                'finished_at' => $finishedAt 
             ], 200);
         } 
         catch (\Exception $e) {
@@ -97,6 +101,7 @@ class SyncTableConfigController extends Controller
             ], 500);
         }
     }
+
 
     public function store(SyncTableConfigCreateRequest $request) 
     {

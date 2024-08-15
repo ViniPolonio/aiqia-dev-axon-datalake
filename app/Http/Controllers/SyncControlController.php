@@ -56,4 +56,19 @@ class SyncControlController extends Controller
             ], 500);
         }
     }
+
+    public function returnShowTableConfig($id) {
+        try {
+            $records = SyncControl::where('sync_table_config_id', '=', $id)->get();
+            $lastRecord = $records->last(); // Pega o último registro da coleção
+            return $lastRecord;
+    
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 0,
+                'message' => 'An error has occurred: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
 }
