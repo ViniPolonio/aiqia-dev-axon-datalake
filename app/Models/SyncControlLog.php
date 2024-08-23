@@ -6,27 +6,29 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class SyncControl extends Model
+class SyncControlLog extends Model
 {
     use HasFactory;
 
     protected $connection = 'mysql';
 
-    protected $table = 'sync_control';
+    protected $table = 'sync_control_log';
 
     protected $fillable = [
-        'sync_control_id',
-        'table_name',
+        'id',
+        'process_name',
+        'process_type',
         'runtime_second',
         'success',
-        'error', 
+        'error',
+        'process_file',
         'started_at',
         'finished_at',
         'is_batch_call',
         'start_batch_date',
         'end_batch_date',
-        'sync_table_config_id',
-        'sync_time_config_id',
+        'sync_control_config_id',
+        'sync_control_time_config_id',
+        'created_at',
     ];
-
 }

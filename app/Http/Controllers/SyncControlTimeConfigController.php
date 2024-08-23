@@ -1,17 +1,16 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Http\Requests\SyncConfig\SyncTimeConfigCreateRequest;
-use App\Http\Requests\SyncConfig\SyncTimeConfigUpdateRequest;
-use App\Models\SyncTableConfig;
-use App\Models\SyncTimeConfig;
+use App\Http\Requests\SyncConfig\SyncControlTimeConfigCreateRequest;
+use App\Http\Requests\SyncConfig\SyncControlTimeConfigUpdateRequest;
+use App\Models\SyncControlTimeConfig;
 
 
-class SyncTimeConfigController extends Controller
+class SyncControlTimeConfigController extends Controller
 {
     public function index() {
         try {
-            $return = SyncTimeConfig::whereNull('deleted_at')->get();
+            $return = SyncControlTimeConfig::whereNull('deleted_at')->get();
 
             if(!$return) {
                 return response()->json([
@@ -43,7 +42,7 @@ class SyncTimeConfigController extends Controller
                     'message' => 'ID is required.'
                 ], 400); 
             }
-            $return = SyncTimeConfig::where('sync_table_config_id', '=', $id)->get();
+            $return = SyncControlTimeConfig::where('sync_control_config_id', '=', $id)->get();
 
             if(!$return) {
                 return response()->json([
@@ -65,10 +64,10 @@ class SyncTimeConfigController extends Controller
         }
     }
 
-    public function store(SyncTimeConfigCreateRequest $request) 
+    public function store(SyncControlTimeConfigCreateRequest $request) 
     {
         try {
-            $syncTableConfig = SyncTableConfig::find($request->input('sync_table_config_id'));
+            $syncTableConfig = SyncControlTimeConfig::find($request->input('sync_control_config_id'));
 
             if (!$syncTableConfig) {
                 return response()->json([
@@ -77,7 +76,7 @@ class SyncTimeConfigController extends Controller
                 ], 404); 
             }
 
-            $syncTime = SyncTimeConfig::create($request->validated());
+            $syncTime = SyncControlTimeConfig::create($request->validated());
 
             if ($syncTime && $syncTime->id) {
                 return response()->json([
@@ -99,10 +98,10 @@ class SyncTimeConfigController extends Controller
         }
     }
 
-    public function update(SyncTimeConfigUpdateRequest $request, $id)
+    public function update(SyncControlTimeConfigUpdateRequest $request, $id)
     {
         try {
-            $syncTableConfig = SyncTableConfig::find($request->input('sync_table_config_id'));
+            $syncTableConfig = SyncControlTimeConfig::find($request->input('sync_control_config_id'));
 
             if (empty($id)) {
                 return response()->json([
@@ -118,7 +117,7 @@ class SyncTimeConfigController extends Controller
                 ], 404);
             }
 
-            $syncTimeConfig = SyncTimeConfig::findOrFail($id);
+            $syncTimeConfig = SyncControlTimeConfig::findOrFail($id);
 
             if (!$syncTimeConfig) {
                 return response()->json([
@@ -142,14 +141,13 @@ class SyncTimeConfigController extends Controller
                 ], 500);
             }
         } catch (\Exception $e) {
+            dd($e);
             return response()->json([
                 'status' => 0,
                 'message' => 'An error has occurred: ' . $e->getMessage()
             ], 500);
         }
     }
-
-
 
     public function destroy($id) 
     {
@@ -161,7 +159,7 @@ class SyncTimeConfigController extends Controller
                 ], 400); 
             }
     
-            $return = SyncTimeConfig::find($id);
+            $return = SyncControlTimeConfig::find($id);
 
             if (!$return) {
                 return response()->json([

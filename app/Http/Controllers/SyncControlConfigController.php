@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\SyncConfig\SyncTableConfigCreateRequest;
-use App\Http\Requests\SyncConfig\SyncTableConfigUpdateRequest;
-use App\Models\SyncTableConfig;
+use App\Http\Requests\SyncConfig\SyncControlConfigCreateRequest;
+use App\Http\Requests\SyncConfig\SyncControlConfigUpdateRequest;
+use App\Models\SyncControlConfig;
 use Illuminate\Http\Request;
-class SyncTableConfigController extends Controller
+class SyncControlConfigController extends Controller
 {
     public function index() 
     {
         try {
-            $configs = SyncTableConfig::whereNull('deleted_at')->get();
+            $configs = SyncControlConfig::whereNull('deleted_at')->get();
 
             if ($configs->isEmpty()) {
                 return response()->json([
@@ -20,15 +20,15 @@ class SyncTableConfigController extends Controller
                 ], 204);
             }
 
-            $response = app(SyncControlController::class)->consultingExecute();
+            $response = app(SyncControlLogsController::class)->consultingExecute();
             $syncControlData = collect($response);
             $data = [];
 
             foreach ($configs as $config) {
-                $syncData = $syncControlData->firstWhere('sync_table_config_id', $config->id);
+                $syncData = $syncControlData->firstWhere('sync_control_config_id', $config->id);
 
                 if ($syncData) {
-                    $configData['sync_table_config_id'] = $syncData['sync_table_config_id'];
+                    $configData['sync_control_config_id'] = $syncData['sync_control_config_id'];
                     $configData['success'] = $syncData['success'];
                     $configData['finished_at'] = $syncData['finished_at'];
                     $success = 1;
@@ -37,20 +37,16 @@ class SyncTableConfigController extends Controller
                 }
                 $configData = [
                     'id'                => $config->id,
-                    'oracle_name'       => $config->oracle_name,
-                    'mysql_name'        => $config->mysql_name,
                     'active'            => $config->active,
                     'created_at'        => $config->created_at,
                     'updated_at'        => $config->updated_at,
                     'deleted_at'        => $config->deleted_at,
-                    'field_check_name'  => $config->field_check_name,
-                    'uniq_fields_name'  => $config->uniq_fields_name,
                     'success'           => $success, //Registro na tabela SyncControl || 0-Erro | 1-Sucesso | 2-Não possui registro na tabela.
                     'finished_at'       => $configData['finished_at']
                 ];
 
                 $data[] = [
-                    'sync_table_config_id' => $config->id,
+                    'sync_control_config_id' => $config->id,
                     'config_data' => $configData,
                 ];
             }
@@ -76,10 +72,10 @@ class SyncTableConfigController extends Controller
                 ], 400); 
             }
 
-            $syncControl = app(SyncControlController::class)->returnShowTableConfig($id);
+            $syncControl = app(SyncControlLogsController::class)->returnShowTableConfig($id);
             $finishedAt = $syncControl ? $syncControl->finished_at : null;
 
-            $return = SyncTableConfig::find($id);
+            $return = SyncControlConfig::find($id);
         
             if (!$return) {
                 return response()->json([
@@ -103,10 +99,10 @@ class SyncTableConfigController extends Controller
     }
 
 
-    public function store(SyncTableConfigCreateRequest $request) 
+    public function store(SyncControlConfigCreateRequest $request) 
     {
         try {
-            $syncTableConfig = SyncTableConfig::create($request->validated());
+            $syncTableConfig = SyncControlConfig::create($request->validated());
             $syncTableConfig->active = 1;
             $syncTableConfig->save();
             
@@ -131,7 +127,7 @@ class SyncTableConfigController extends Controller
         }
     }
 
-    public function update(SyncTableConfigUpdateRequest $request, $id) 
+    public function update(SyncControlConfigUpdateRequest $request, $id) 
     {
         try {
             if (!is_numeric($id)) {
@@ -141,7 +137,7 @@ class SyncTableConfigController extends Controller
                 ], 400);
             }
             
-            $syncTableConfig = SyncTableConfig::findOrFail($id);
+            $syncTableConfig = SyncControlConfig::findOrFail($id);
 
             $updateSuccessful = $syncTableConfig->update($request->validated());
 
@@ -176,7 +172,7 @@ class SyncTableConfigController extends Controller
                 ], 400); 
             }
     
-            $return = SyncTableConfig::find($id);
+            $return = SyncControlConfig::find($id);
 
     
             if (!$return) {
@@ -202,7 +198,6 @@ class SyncTableConfigController extends Controller
         }
     }
 
-
     public function acTiveOrDesactive($id, Request $request) {
         
         try {
@@ -216,8 +211,7 @@ class SyncTableConfigController extends Controller
                     'message'  => "The ID number is not valid"
                 ], 400);
             }
-            
-            $syncTableConfig = SyncTableConfig::findOrFail($id);
+            $syncTableConfig = SyncControlConfig::findOrFail($id);
 
             $updateSuccessful = $syncTableConfig->update([
                 'active' => $validatedData['active']

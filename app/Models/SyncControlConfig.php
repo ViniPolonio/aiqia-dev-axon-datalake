@@ -6,20 +6,17 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class SyncTableConfig extends Model
+class SyncControlConfig extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $connection = 'mysql';
 
-    protected $table = 'sync_table_config';
+    protected $table = 'sync_control_config';
 
     protected $fillable = [
         'id',
-        'oracle_name',
-        'mysql_name',
-        'field_check_name',
-        'uniq_fields_name',
+        'process_name',
         'active',
         'created_at',
         'updated_at',

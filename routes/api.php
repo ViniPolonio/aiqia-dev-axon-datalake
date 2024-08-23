@@ -18,10 +18,15 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::resource('sync-table-config', App\Http\Controllers\SyncTableConfigController::class);
-Route::resource('sync-table-time', App\Http\Controllers\SyncTimeConfigController::class);
+//Sync Control Logs
+Route::resource('sync-control-logs', App\Http\Controllers\SyncControlLogsController::class);
+Route::get('sync-control/return-show-tableconfig/{id}', [App\Http\Controllers\SyncControlLogsController::class, 'returnShowTableConfig']);
+Route::get('sync-control/consulting-logs/', [App\Http\Controllers\SyncControlLogsController::class, 'consultingExecute']);
 
-Route::get('sync-control/consulting-execute/', [App\Http\Controllers\SyncControlController::class, 'consultingExecute']);
-Route::resource('sync-table-control', App\Http\Controllers\SyncControlController::class);
-Route::put('sync-table-config-activeOrDesactive/{id}', [App\Http\Controllers\SyncTableConfigController::class, 'acTiveOrDesactive']);
+//Sync Control Config
+Route::resource('sync-control-config', App\Http\Controllers\SyncControlConfigController::class);
+Route::put('sync-control-config-activeOrDesactive/{id}', [App\Http\Controllers\SyncControlConfigController::class, 'acTiveOrDesactive']);
+
+//Sync Control Time
+Route::resource('sync-control-time', App\Http\Controllers\SyncControlTimeConfigController::class);
 
