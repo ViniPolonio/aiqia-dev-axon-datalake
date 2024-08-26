@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 use App\Http\Requests\SyncConfig\SyncControlTimeConfigCreateRequest;
 use App\Http\Requests\SyncConfig\SyncControlTimeConfigUpdateRequest;
+use App\Models\SyncControlConfig;
 use App\Models\SyncControlTimeConfig;
 
 
@@ -67,7 +68,7 @@ class SyncControlTimeConfigController extends Controller
     public function store(SyncControlTimeConfigCreateRequest $request) 
     {
         try {
-            $syncTableConfig = SyncControlTimeConfig::find($request->input('sync_control_config_id'));
+            $syncTableConfig = SyncControlConfig::find($request->input('sync_control_config_id'));
 
             if (!$syncTableConfig) {
                 return response()->json([

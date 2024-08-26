@@ -21,6 +21,7 @@ class SyncControlConfigController extends Controller
             }
 
             $response = app(SyncControlLogsController::class)->consultingExecute();
+            
             $syncControlData = collect($response);
             $data = [];
 
