@@ -31,12 +31,14 @@ class SyncControlConfigController extends Controller
                     $configData['sync_control_config_id'] = $syncData['sync_control_config_id'];
                     $configData['success'] = $syncData['success'];
                     $configData['finished_at'] = $syncData['finished_at'];
+                    $configData['process_name'] = $syncData['process_name'];
                     $success = 1;
                 } else {
                     $success = 2;
                 }
                 $configData = [
                     'id'                => $config->id,
+                    'process_name'      => $config->process_name,
                     'active'            => $config->active,
                     'created_at'        => $config->created_at,
                     'updated_at'        => $config->updated_at,
