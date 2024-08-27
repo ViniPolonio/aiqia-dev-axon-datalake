@@ -102,7 +102,7 @@ class SyncControlTimeConfigController extends Controller
     public function update(SyncControlTimeConfigUpdateRequest $request, $id)
     {
         try {
-            $syncTableConfig = SyncControlTimeConfig::find($request->input('sync_control_config_id'));
+            $syncTableConfig = SyncControlConfig::find($request->input('sync_control_config_id'));
 
             if (empty($id)) {
                 return response()->json([
