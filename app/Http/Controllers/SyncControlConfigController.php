@@ -5,65 +5,73 @@ namespace App\Http\Controllers;
 use App\Http\Requests\SyncConfig\SyncControlConfigCreateRequest;
 use App\Http\Requests\SyncConfig\SyncControlConfigUpdateRequest;
 use App\Models\SyncControlConfig;
+use App\Models\SyncControlLog;
 use Illuminate\Http\Request;
 class SyncControlConfigController extends Controller
 {
     public function index() 
-    {
-        try {
-            $configs = SyncControlConfig::whereNull('deleted_at')->get();
-
-            if ($configs->isEmpty()) {
-                return response()->json([
-                    'status' => 0,
-                    'message' => 'No records found.'
-                ], 204);
-            }
-
-            $response = app(SyncControlLogsController::class)->consultingExecute();
-            
-            $syncControlData = collect($response);
-            $data = [];
-
-            foreach ($configs as $config) {
-                $syncData = $syncControlData->firstWhere('sync_control_config_id', $config->id);
-
-                if ($syncData) {
-                    $configData['sync_control_config_id'] = $syncData['sync_control_config_id'];
-                    $configData['success'] = $syncData['success'];
-                    $configData['finished_at'] = $syncData['finished_at'];
-                    $configData['process_name'] = $syncData['process_name'];
-                    $success = 1;
-                } else {
-                    $success = 2;
-                }
-                $configData = [
-                    'id'                => $config->id,
-                    'process_name'      => $config->process_name,
-                    'active'            => $config->active,
-                    'created_at'        => $config->created_at,
-                    'updated_at'        => $config->updated_at,
-                    'deleted_at'        => $config->deleted_at,
-                    'success'           => $success, //Registro na tabela SyncControl || 0-Erro | 1-Sucesso | 2-Não possui registro na tabela.
-                    'finished_at'       => $configData['finished_at']
-                ];
-
-                $data[] = [
-                    'sync_control_config_id' => $config->id,
-                    'config_data' => $configData,
-                ];
-            }
-            return response()->json([
-                'data'      => $data
-            ], 200);
-        } 
-        catch (\Exception $e) {
+{
+    try {
+        $configs = SyncControlConfig::whereNull('deleted_at')->get();
+        
+        if ($configs->isEmpty()) {
             return response()->json([
                 'status' => 0,
-                'message' => 'An error has occurred: ' . $e->getMessage()
-            ], 500);
+                'message' => 'No records found.'
+            ], 204);
         }
+
+        $data = [];
+
+        foreach ($configs as $config) {
+            $logs = SyncControlLog::where('sync_control_config_id', $config->id)
+                ->orderBy('finished_at', 'desc')
+                ->take(10)
+                ->select(['sync_control_config_id', 'success', 'runtime_second', 'finished_at'])
+                ->get()
+                ->map(function ($log) {
+                    return [
+                        'success' => $log->success,
+                        'runtime_second' => $log->runtime_second,
+                        'finished_at' => $log->finished_at,
+                        'error' => $log->error ?? null, 
+                    ];
+                })
+                ->values() 
+                ->toArray();
+
+            $success = !empty($logs) ? 1 : 2; // 1 se houver dados, 2 se não houver
+
+            $configData = [
+                'id'                => $config->id,
+                'process_name'      => $config->process_name,
+                'active'            => $config->active,
+                'created_at'        => $config->created_at,
+                'updated_at'        => $config->updated_at,
+                'deleted_at'        => $config->deleted_at,
+                'success'           => $success, // Registro na tabela SyncControl || 0-Erro | 1-Sucesso | 2-Não possui registro na tabela.
+            ];
+
+            $data[] = [
+                'sync_control_config_id' => $config->id,
+                'config_data' => $configData,
+                'logs' => !empty($logs) ? $logs : null,
+            ];
+        }
+
+        return response()->json($data, 200);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 0,
+            'message' => 'An error has occurred: ' . $e->getMessage()
+        ], 500);
     }
+}
+
+
+
+
 
     public function show($id) 
     {
@@ -236,6 +244,26 @@ class SyncControlConfigController extends Controller
             return response()->json([
                 'status'  => 0,
                 'message' => 'Error has occurred: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function orderIds($configs) {
+        try {
+            $configs = collect($configs);
+            $orderedConfigs = $configs->sortBy('id');
+            $ids = [];
+
+            foreach ($orderedConfigs as $config) {
+                $ids[] = $config['id']; 
+            }
+    
+            return $ids;
+    
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 0,
+                'message' => 'An error has occurred: ' . $e->getMessage()
             ], 500);
         }
     }

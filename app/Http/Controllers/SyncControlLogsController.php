@@ -24,35 +24,33 @@ class SyncControlLogsController extends Controller
         }
     }
 
-    public function consultingExecute() 
+    public function consultingExecute($ids) 
     {
         try {
-            $subQuery = SyncControlLog::selectRaw('MAX(finished_at) as latest_finished_at, sync_control_config_id')
-                ->groupBy('sync_control_config_id');
+            if (!is_array($ids)) {
+                $ids = [$ids];
+            }
 
-            $successRecords = SyncControlLog::joinSub($subQuery, 'sub', function ($join) {
-                    $join->on('sync_control_log.sync_control_config_id', '=', 'sub.sync_control_config_id')
-                        ->on('sync_control_log.finished_at', '=', 'sub.latest_finished_at');
-                })
-                ->select(
-                    'sync_control_log.sync_control_config_id',
-                    'sync_control_log.success',
-                    'sync_control_log.finished_at',
-                    'sync_control_log.process_name',
-                    'sync_control_log.process_type',
-                    'sync_control_log.runtime_second',
-                    'sync_control_log.error',
-                    'sync_control_log.process_file',
-                    'sync_control_log.started_at',
-                    'sync_control_log.is_batch_call',
-                    'sync_control_log.start_batch_date',
-                    'sync_control_log.end_batch_date',
-                    'sync_control_log.sync_control_time_config_id',
-                    'sync_control_log.created_at'
-                )
-                ->get();
+            $results = []; 
 
-            return $successRecords;
+            foreach ($ids as $id) {
+                if (!is_numeric($id)) {
+                    throw new \Exception('Invalid ID provided.');
+                }
+
+                $consulta = SyncControlLog::where('sync_control_config_id', $id)
+                    ->select(['sync_control_config_id', 'success', 'runtime_second', 'finished_at'])
+                    ->orderBy('finished_at', 'asc') 
+                    ->limit(20)
+                    ->get()
+                    ->toArray();  
+
+                $results[$id] = $consulta;
+            }
+
+            return response()->json([
+                'data' => $results
+            ], 200);
         } 
         catch (\Exception $e) {
             return response()->json([
