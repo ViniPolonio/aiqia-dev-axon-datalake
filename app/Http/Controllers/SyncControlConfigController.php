@@ -9,13 +9,16 @@ use App\Models\SyncControlLog;
 use Illuminate\Http\Request;
 class SyncControlConfigController extends Controller
 {
-    public function index(Request $request) 
+    public function index(Request $request)
     {
         try {
-            $cursor = $request->input('cursor', null);
+            $perPage = 10; 
+
+            $cursor = $request->input('cursor');
 
             $configs = SyncControlConfig::whereNull('deleted_at')
-                ->cursorPaginate(10, ['*'], 'cursor', $cursor);
+                ->orderBy('id') 
+                ->cursorPaginate($perPage, ['*'], 'cursor', $cursor);
 
             if ($configs->isEmpty()) {
                 return response()->json([
@@ -29,7 +32,8 @@ class SyncControlConfigController extends Controller
             foreach ($configs as $config) {
                 $logs = SyncControlLog::where('sync_control_config_id', $config->id)
                     ->orderBy('finished_at', 'desc')
-                    ->cursorPaginate(10)
+                    ->take($perPage)
+                    ->get()
                     ->map(function ($log) {
                         return [
                             'success' => $log->success,
@@ -56,8 +60,7 @@ class SyncControlConfigController extends Controller
 
             return response()->json([
                 'data' => $data,
-                'next_cursor' => $configs->nextCursor(),
-                'prev_cursor' => $configs->previousCursor()
+                'next_cursor' => $configs->nextCursor() 
             ], 200);
 
         } catch (\Exception $e) {
