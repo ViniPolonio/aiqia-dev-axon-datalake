@@ -21,7 +21,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 //Sync Control Logs
 Route::resource('sync-control-logs', App\Http\Controllers\SyncControlLogsController::class);
 Route::get('sync-control/return-show-tableconfig/{id}', [App\Http\Controllers\SyncControlLogsController::class, 'returnShowTableConfig']);
-Route::get('sync-control/consulting-logs/', [App\Http\Controllers\SyncControlLogsController::class, 'consultingExecute']);
 
 //Sync Control Config
 Route::resource('sync-control-config', App\Http\Controllers\SyncControlConfigController::class);

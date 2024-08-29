@@ -24,42 +24,6 @@ class SyncControlLogsController extends Controller
         }
     }
 
-    public function consultingExecute($ids) 
-    {
-        try {
-            if (!is_array($ids)) {
-                $ids = [$ids];
-            }
-
-            $results = []; 
-
-            foreach ($ids as $id) {
-                if (!is_numeric($id)) {
-                    throw new \Exception('Invalid ID provided.');
-                }
-
-                $consulta = SyncControlLog::where('sync_control_config_id', $id)
-                    ->select(['sync_control_config_id', 'success', 'runtime_second', 'finished_at'])
-                    ->orderBy('finished_at', 'asc') 
-                    ->limit(20)
-                    ->get()
-                    ->toArray();  
-
-                $results[$id] = $consulta;
-            }
-
-            return response()->json([
-                'data' => $results
-            ], 200);
-        } 
-        catch (\Exception $e) {
-            return response()->json([
-                'status' => 0, 
-                'message' => 'Error while searching: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
     public function show($id)
     {
         try {
