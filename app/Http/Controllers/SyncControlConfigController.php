@@ -9,11 +9,14 @@ use App\Models\SyncControlLog;
 use Illuminate\Http\Request;
 class SyncControlConfigController extends Controller
 {
-    public function index() 
+    public function index(Request $request) 
     {
         try {
-            $configs = SyncControlConfig::whereNull('deleted_at')->get();
-            
+            $cursor = $request->input('cursor', null);
+
+            $configs = SyncControlConfig::whereNull('deleted_at')
+                ->cursorPaginate(10, ['*'], 'cursor', $cursor);
+
             if ($configs->isEmpty()) {
                 return response()->json([
                     'status' => 0,
@@ -26,10 +29,7 @@ class SyncControlConfigController extends Controller
             foreach ($configs as $config) {
                 $logs = SyncControlLog::where('sync_control_config_id', $config->id)
                     ->orderBy('finished_at', 'desc')
-                    ->take(10)
-                    ->select(['sync_control_config_id', 'success', 'runtime_second', 'finished_at'])
-                    ->get()
-                    ->sortBy('finished_at')
+                    ->cursorPaginate(10)
                     ->map(function ($log) {
                         return [
                             'success' => $log->success,
@@ -38,29 +38,28 @@ class SyncControlConfigController extends Controller
                             'error' => $log->error ?? null, 
                         ];
                     })
-                    ->values() 
                     ->toArray();
-
-                $success = !empty($logs) ? 1 : 2; // 1 se houver dados, 2 se não houver
-
-                $configData = [
-                    'id'                => $config->id,
-                    'process_name'      => $config->process_name,
-                    'active'            => $config->active,
-                    'created_at'        => $config->created_at,
-                    'updated_at'        => $config->updated_at,
-                    'deleted_at'        => $config->deleted_at,
-                ];
 
                 $data[] = [
                     'sync_control_config_id' => $config->id,
-                    'config_data' => $configData,
-                    'logs' => !empty($logs) ? $logs : null,
+                    'config_data' => [
+                        'id' => $config->id,
+                        'process_name' => $config->process_name,
+                        'active' => $config->active,
+                        'created_at' => $config->created_at,
+                        'updated_at' => $config->updated_at,
+                        'deleted_at' => $config->deleted_at,
+                    ],
+                    'logs' => $logs,
                 ];
             }
 
-            return response()->json($data, 200);
-            
+            return response()->json([
+                'data' => $data,
+                'next_cursor' => $configs->nextCursor(),
+                'prev_cursor' => $configs->previousCursor()
+            ], 200);
+
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 0,
