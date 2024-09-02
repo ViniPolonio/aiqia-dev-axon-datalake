@@ -24,9 +24,13 @@ class SyncControlConfigController extends Controller
             $data = [];
 
             foreach ($configs as $config) {
+                if (is_null($config->process_name)) {
+                    continue;
+                }
+
                 $logs = SyncControlLog::where('sync_control_config_id', $config->id)
                     ->orderBy('finished_at', 'desc')
-                    ->take(10)
+                    ->take(20)
                     ->select(['sync_control_config_id', 'success', 'runtime_second', 'finished_at'])
                     ->get()
                     ->map(function ($log) {
@@ -49,7 +53,7 @@ class SyncControlConfigController extends Controller
                     'created_at'        => $config->created_at,
                     'updated_at'        => $config->updated_at,
                     'deleted_at'        => $config->deleted_at,
-                    'success'           => $success, // Registro na tabela SyncControl || 0-Erro | 1-Sucesso | 2-Não possui registro na tabela.
+                    'success'           => $success, // 0-Erro | 1-Sucesso | 2-Não possui registro na tabela
                 ];
 
                 $data[] = [
