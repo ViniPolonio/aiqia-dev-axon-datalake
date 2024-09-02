@@ -62,7 +62,7 @@ class SyncControlLogsController extends Controller
     {
         try {
             $cursor = $request->input('cursor'); 
-            $perPage = 10; 
+            $perPage = 20; 
 
             if ($cursor !== null && !is_string($cursor)) {
                 return response()->json([
