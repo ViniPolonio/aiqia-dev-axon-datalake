@@ -9,16 +9,10 @@ use App\Models\SyncControlLog;
 use Illuminate\Http\Request;
 class SyncControlConfigController extends Controller
 {
-    public function index(Request $request)
+    public function index() 
     {
         try {
-            $perPage = 10; 
-
-            $cursor = $request->input('cursor');
-
-            $configs = SyncControlConfig::whereNull('deleted_at')
-                ->orderBy('id') 
-                ->cursorPaginate($perPage, ['*'], 'cursor', $cursor);
+            $configs = SyncControlConfig::whereNull('deleted_at')->get();
 
             if ($configs->isEmpty()) {
                 return response()->json([
@@ -32,7 +26,8 @@ class SyncControlConfigController extends Controller
             foreach ($configs as $config) {
                 $logs = SyncControlLog::where('sync_control_config_id', $config->id)
                     ->orderBy('finished_at', 'desc')
-                    ->take($perPage)
+                    ->take(10)
+                    ->select(['sync_control_config_id', 'success', 'runtime_second', 'finished_at'])
                     ->get()
                     ->map(function ($log) {
                         return [
@@ -42,26 +37,49 @@ class SyncControlConfigController extends Controller
                             'error' => $log->error ?? null, 
                         ];
                     })
+                    ->values() 
                     ->toArray();
+
+                $success = !empty($logs) ? 1 : 2; // 1 se houver dados, 2 se não houver
+
+                $configData = [
+                    'id'                => $config->id,
+                    'process_name'      => $config->process_name,
+                    'active'            => $config->active,
+                    'created_at'        => $config->created_at,
+                    'updated_at'        => $config->updated_at,
+                    'deleted_at'        => $config->deleted_at,
+                    'success'           => $success, // Registro na tabela SyncControl || 0-Erro | 1-Sucesso | 2-Não possui registro na tabela.
+                ];
 
                 $data[] = [
                     'sync_control_config_id' => $config->id,
-                    'config_data' => [
-                        'id' => $config->id,
-                        'process_name' => $config->process_name,
-                        'active' => $config->active,
-                        'created_at' => $config->created_at,
-                        'updated_at' => $config->updated_at,
-                        'deleted_at' => $config->deleted_at,
-                    ],
-                    'logs' => $logs,
+                    'config_data' => $configData,
+                    'logs' => !empty($logs) ? $logs : null,
                 ];
             }
 
+            return response()->json($data, 200);
+
+        } catch (\Exception $e) {
             return response()->json([
-                'data' => $data,
-                'next_cursor' => $configs->nextCursor() 
-            ], 200);
+                'status' => 0,
+                'message' => 'An error has occurred: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function orderIds($configs) {
+        try {
+            $configs = collect($configs);
+            $orderedConfigs = $configs->sortBy('id');
+            $ids = [];
+
+            foreach ($orderedConfigs as $config) {
+                $ids[] = $config['id']; 
+            }
+
+            return $ids;
 
         } catch (\Exception $e) {
             return response()->json([
@@ -240,26 +258,6 @@ class SyncControlConfigController extends Controller
             return response()->json([
                 'status'  => 0,
                 'message' => 'Error has occurred: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    public function orderIds($configs) {
-        try {
-            $configs = collect($configs);
-            $orderedConfigs = $configs->sortBy('id');
-            $ids = [];
-
-            foreach ($orderedConfigs as $config) {
-                $ids[] = $config['id']; 
-            }
-    
-            return $ids;
-    
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 0,
-                'message' => 'An error has occurred: ' . $e->getMessage()
             ], 500);
         }
     }
