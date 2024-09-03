@@ -31,20 +31,29 @@ class SyncControlConfigController extends Controller
                 $logs = SyncControlLog::where('sync_control_config_id', $config->id)
                     ->orderBy('finished_at', 'desc')
                     ->take(20)
-                    ->select(['sync_control_config_id', 'success', 'runtime_second', 'finished_at'])
+                    ->select(['sync_control_config_id', 'success', 'runtime_second', 'finished_at', 'error'])
                     ->get()
                     ->map(function ($log) {
+                        $timeDifference = \Carbon\Carbon::now()->diffInMinutes(\Carbon\Carbon::parse($log->finished_at));
+
+                        if ($timeDifference > 5) {
+                            $log->success = 0;
+                        }
+
                         return [
                             'success' => $log->success,
                             'runtime_second' => $log->runtime_second,
                             'finished_at' => $log->finished_at,
-                            'error' => $log->error ?? null, 
+                            'error' => $log->error ?? null,
                         ];
                     })
-                    ->values() 
+                    ->values()
                     ->toArray();
 
-                $success = !empty($logs) ? 1 : 2; // 1 se houver dados, 2 se não houver
+                $success = 2;
+                if (!empty($logs)) {
+                    $success = collect($logs)->contains('success', 1) ? 1 : 0;
+                }
 
                 $configData = [
                     'id'                => $config->id,
@@ -63,7 +72,10 @@ class SyncControlConfigController extends Controller
                 ];
             }
 
-            return response()->json($data, 200);
+            return response()->json([
+                'status' => 1,
+                'data' => $data
+            ], 200);
 
         } catch (\Exception $e) {
             return response()->json([
@@ -72,6 +84,7 @@ class SyncControlConfigController extends Controller
             ], 500);
         }
     }
+
 
     public function orderIds($configs) {
         try {

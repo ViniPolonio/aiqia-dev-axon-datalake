@@ -2,10 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\SyncControl;
 use App\Models\SyncControlConfig;
 use App\Models\SyncControlLog;
-use App\Models\SyncTableConfig;
 use Illuminate\Http\Request;
 
 class SyncControlLogsController extends Controller
@@ -70,7 +68,6 @@ class SyncControlLogsController extends Controller
                     'message' => 'Invalid cursor format.'
                 ], 400);
             }
-
             
             $config = SyncControlConfig::find($id);
 
