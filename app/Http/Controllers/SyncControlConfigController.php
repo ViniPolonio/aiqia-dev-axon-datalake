@@ -6,6 +6,7 @@ use App\Http\Requests\SyncConfig\SyncControlConfigCreateRequest;
 use App\Http\Requests\SyncConfig\SyncControlConfigUpdateRequest;
 use App\Models\SyncControlConfig;
 use App\Models\SyncControlLog;
+use App\Models\SyncControlTimeConfig;
 use Illuminate\Http\Request;
 class SyncControlConfigController extends Controller
 {
@@ -13,7 +14,10 @@ class SyncControlConfigController extends Controller
     {
         try {
             $configs = SyncControlConfig::whereNull('deleted_at')->get();
+            $ids = $configs->pluck('id');
 
+            $consultTimeConfig = collect($this->consultTimer($ids)); 
+            
             if ($configs->isEmpty()) {
                 return response()->json([
                     'status' => 0,
@@ -28,18 +32,17 @@ class SyncControlConfigController extends Controller
                     continue;
                 }
 
+                $lastLog = SyncControlLog::where('sync_control_config_id', $config->id)
+                    ->orderBy('finished_at', 'desc')
+                    ->select(['sync_control_config_id', 'success', 'runtime_second', 'finished_at', 'error'])
+                    ->first();
+
                 $logs = SyncControlLog::where('sync_control_config_id', $config->id)
                     ->orderBy('finished_at', 'desc')
                     ->take(20)
                     ->select(['sync_control_config_id', 'success', 'runtime_second', 'finished_at', 'error'])
                     ->get()
                     ->map(function ($log) {
-                        $timeDifference = \Carbon\Carbon::now()->diffInMinutes(\Carbon\Carbon::parse($log->finished_at));
-
-                        if ($timeDifference > 5) {
-                            $log->success = 0;
-                        }
-
                         return [
                             'success' => $log->success,
                             'runtime_second' => $log->runtime_second,
@@ -50,19 +53,42 @@ class SyncControlConfigController extends Controller
                     ->values()
                     ->toArray();
 
-                $success = 2;
-                if (!empty($logs)) {
-                    $success = collect($logs)->contains('success', 1) ? 1 : 0;
+                $configTime = $consultTimeConfig->firstWhere('sync_control_config_id', $config->id);
+                if ($lastLog && $configTime) {
+                    $intervalType = $configTime['interval_type'];
+                    $intervalValue = $configTime['interval_value'];
+                    $intervalDescription = $configTime['interval_description'];
+
+                    $intervalInMinutes = match ($intervalType) {
+                        1 => $intervalValue,            
+                        2 => $intervalValue * 60,       
+                        3 => $intervalValue * 1440,     
+                        default => null,                
+                    };
+
+                    if ($intervalInMinutes) {
+                        $timeDifference = \Carbon\Carbon::now()->diffInMinutes(\Carbon\Carbon::parse($lastLog->finished_at));
+
+                        if ($timeDifference > $intervalInMinutes) {
+                            $lastLog->success = 0;  
+                        }
+                    }
+                }
+
+                $success = 2; 
+                if ($lastLog) {
+                    $success = $lastLog->success == 1 ? 1 : 0; 
                 }
 
                 $configData = [
-                    'id'                => $config->id,
-                    'process_name'      => $config->process_name,
-                    'active'            => $config->active,
-                    'created_at'        => $config->created_at,
-                    'updated_at'        => $config->updated_at,
-                    'deleted_at'        => $config->deleted_at,
-                    'success'           => $success, // 0-Erro | 1-Sucesso | 2-Não possui registro na tabela
+                    'id'            => $config->id,
+                    'process_name'  => $config->process_name,
+                    'active'        => $config->active,
+                    'created_at'    => $config->created_at,
+                    'updated_at'    => $config->updated_at,
+                    'deleted_at'    => $config->deleted_at,
+                    'activated_based_timer' => $success,  
+                    'interval_description' => $intervalDescription
                 ];
 
                 $data[] = [
@@ -84,6 +110,8 @@ class SyncControlConfigController extends Controller
             ], 500);
         }
     }
+
+
 
 
     public function orderIds($configs) {
@@ -116,11 +144,13 @@ class SyncControlConfigController extends Controller
                 ], 400); 
             }
 
+            $consultTimeConfig = collect($this->consultTimer([$id])); 
+
             $syncControl = app(SyncControlLogsController::class)->returnShowTableConfig($id);
             $finishedAt = $syncControl ? $syncControl->finished_at : null;
 
             $return = SyncControlConfig::find($id);
-        
+
             if (!$return) {
                 return response()->json([
                     'status' => 0,
@@ -128,10 +158,40 @@ class SyncControlConfigController extends Controller
                 ], 404); 
             }
 
+            if ($finishedAt && $consultTimeConfig) {
+                $configTime = $consultTimeConfig->firstWhere('sync_control_config_id', $id);
+                if ($configTime) {
+                    $intervalType = $configTime['interval_type'];
+                    $intervalValue = $configTime['interval_value'];
+                    $intervalDescription = $configTime['interval_description'];
+
+                    $intervalInMinutes = match ($intervalType) {
+                        1 => $intervalValue,            
+                        2 => $intervalValue * 60,       
+                        3 => $intervalValue * 1440,     
+                        default => null,                
+                    };
+
+                    if ($intervalInMinutes) {
+                        $timeDifference = \Carbon\Carbon::now()->diffInMinutes(\Carbon\Carbon::parse($finishedAt));
+
+                        if ($timeDifference > $intervalInMinutes) {
+                            return response()->json([
+                                'status' => 0,
+                                'data' => $return,
+                                'finished_at' => $finishedAt,
+                                'interval_description' => $intervalDescription,
+                            ], 200);
+                        }
+                    }
+                }
+            }
+
             return response()->json([
                 'status' => 1,
                 'data' => $return,
-                'finished_at' => $finishedAt 
+                'finished_at' => $finishedAt,
+                'interval_description' => $intervalDescription,
             ], 200);
         } 
         catch (\Exception $e) {
@@ -141,6 +201,7 @@ class SyncControlConfigController extends Controller
             ], 500);
         }
     }
+
 
     public function store(SyncControlConfigCreateRequest $request) 
     {
@@ -278,4 +339,34 @@ class SyncControlConfigController extends Controller
             ], 500);
         }
     }
+
+
+    //Consulta a configuração de timer da config 
+    private function consultTimer($ids) {
+        $consultTimeConfig = SyncControlTimeConfig::whereIn('sync_control_config_id', $ids)
+            ->where('active', 1)
+            ->get();
+    
+        $arrayFormated = $consultTimeConfig->map(function ($item) {
+            $intervalTypes = [
+                1 => 'minuto(s)',
+                2 => 'hora(s)',
+                3 => 'dia(s)',
+            ];
+    
+            $intervalTypeDescription = isset($intervalTypes[$item->interval_type]) 
+                ? $intervalTypes[$item->interval_type] 
+                : 'desconhecido';
+    
+            return [
+                'sync_control_config_id' => $item->sync_control_config_id,
+                'interval_description' => $item->interval_value . ' ' . $intervalTypeDescription,
+                'interval_type' => $item->interval_type,
+                'interval_value' => $item->interval_value,
+                'active' => $item->active,
+            ];
+        });
+        return $arrayFormated->toArray(); 
+    }
 }
+    
