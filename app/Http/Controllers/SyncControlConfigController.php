@@ -16,8 +16,17 @@ class SyncControlConfigController extends Controller
             $configs = SyncControlConfig::whereNull('deleted_at')->get();
             $ids = $configs->pluck('id');
 
-            $consultTimeConfig = collect($this->consultTimer($ids)); 
-            
+            $consultTimeConfig = $this->consultTimer($ids);
+
+            if (isset($consultTimeConfig['status']) && $consultTimeConfig['status'] == 0) {
+                return response()->json([
+                    'status' => 0,
+                    'message' => $consultTimeConfig['message']
+                ], 404); 
+            }
+
+            $consultTimeConfig = collect($consultTimeConfig);
+
             if ($configs->isEmpty()) {
                 return response()->json([
                     'status' => 0,
@@ -54,7 +63,11 @@ class SyncControlConfigController extends Controller
                     ->toArray();
 
                 $configTime = $consultTimeConfig->firstWhere('sync_control_config_id', $config->id);
-                if ($lastLog && $configTime) {
+
+                $intervalDescription = 'No timer configured';
+                $success = 2;
+
+                if ($configTime) {
                     $intervalType = $configTime['interval_type'];
                     $intervalValue = $configTime['interval_value'];
                     $intervalDescription = $configTime['interval_description'];
@@ -66,7 +79,7 @@ class SyncControlConfigController extends Controller
                         default => null,                
                     };
 
-                    if ($intervalInMinutes) {
+                    if ($intervalInMinutes && $lastLog) {
                         $timeDifference = \Carbon\Carbon::now()->diffInMinutes(\Carbon\Carbon::parse($lastLog->finished_at));
 
                         if ($timeDifference > $intervalInMinutes) {
@@ -75,9 +88,10 @@ class SyncControlConfigController extends Controller
                     }
                 }
 
-                $success = 2; 
                 if ($lastLog) {
                     $success = $lastLog->success == 1 ? 1 : 0; 
+                } else {
+                    $success = 0;
                 }
 
                 $configData = [
@@ -110,8 +124,6 @@ class SyncControlConfigController extends Controller
             ], 500);
         }
     }
-
-
 
 
     public function orderIds($configs) {
@@ -341,11 +353,17 @@ class SyncControlConfigController extends Controller
     }
 
 
-    //Consulta a configuração de timer da config 
     private function consultTimer($ids) {
         $consultTimeConfig = SyncControlTimeConfig::whereIn('sync_control_config_id', $ids)
             ->where('active', 1)
             ->get();
+    
+        if ($consultTimeConfig->isEmpty()) {
+            return [
+                'status' => 0,
+                'message' => 'Não existe configuração de timer para o(s) ID(s) fornecido(s).'
+            ];
+        }
     
         $arrayFormated = $consultTimeConfig->map(function ($item) {
             $intervalTypes = [
@@ -366,7 +384,9 @@ class SyncControlConfigController extends Controller
                 'active' => $item->active,
             ];
         });
+
         return $arrayFormated->toArray(); 
     }
+    
 }
     
