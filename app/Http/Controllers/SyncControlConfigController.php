@@ -101,7 +101,7 @@ class SyncControlConfigController extends Controller
                     'created_at'    => $config->created_at,
                     'updated_at'    => $config->updated_at,
                     'deleted_at'    => $config->deleted_at,
-                    'activated_based_timer' => $success,  
+                    'interval_status' => $success,  
                     'interval_description' => $intervalDescription
                 ];
 
