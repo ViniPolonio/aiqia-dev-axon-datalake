@@ -352,18 +352,11 @@ class SyncControlConfigController extends Controller
         }
     }
 
-
-    private function consultTimer($ids) {
+    public function consultTimer($ids) {
         $consultTimeConfig = SyncControlTimeConfig::whereIn('sync_control_config_id', $ids)
             ->where('active', 1)
             ->get();
     
-        if ($consultTimeConfig->isEmpty()) {
-            return [
-                'status' => 0,
-                'message' => 'Não existe configuração de timer para o(s) ID(s) fornecido(s).'
-            ];
-        }
     
         $arrayFormated = $consultTimeConfig->map(function ($item) {
             $intervalTypes = [
