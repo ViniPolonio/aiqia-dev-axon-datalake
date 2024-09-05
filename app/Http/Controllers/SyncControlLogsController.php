@@ -87,8 +87,8 @@ class SyncControlLogsController extends Controller
         }
 
         // Adicione o interval_description e interval_status ao config
-        $config->interval_description = $configTime['interval_description'] ?? 'No timer configuration';
-        $config->interval_status = $configTime ? '' : 'No timer configuration found'; 
+        $config->interval_description = $configTime['interval_description'] ?? 0;
+        $config->interval_status = $configTime ? '' : 0; 
 
         // Se a configuração de timer existir, verifique se está ativa
         if ($configTime) {
@@ -121,7 +121,7 @@ class SyncControlLogsController extends Controller
             }
 
             // Adicione o intervalo_status baseado na verificação acima
-            $config->interval_status = $inactiveMessage ?: 'Active'; // Define como 'Active' se $inactiveMessage estiver vazio
+            $config->interval_status = $inactiveMessage ?: 1; // Define como 'Active' se $inactiveMessage estiver vazio
         }
 
         // Obtenha os logs com paginação
@@ -150,7 +150,7 @@ class SyncControlLogsController extends Controller
         }
 
         return response()->json([
-            'status' => $inactiveMessage ? 0 : 1, // Status 0 se $inactiveMessage estiver presente, caso contrário, 1
+            'status' => $inactiveMessage ? 0 : 1,
             'message' => $inactiveMessage ?: 'Success',
             'data' => [
                 'config' => $config,
