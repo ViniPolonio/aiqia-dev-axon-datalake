@@ -1,15 +1,6 @@
+import { Button } from "@/components/ui/button";
+import { PauseIcon, PlayIcon } from "lucide-react";
 
-
-import * as React from "react"
-import { Plus } from "lucide-react"
-
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { useRouter } from "next/navigation"
 import {
     Tooltip,
     TooltipContent,
@@ -17,11 +8,17 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-export function AddButton() {
-    const router = useRouter();
-    const handleCreate = () => {
-        router.push(`/Create`)
-    };
+interface StartPauseButtonProps {
+    functionOnClick: () => void;
+    className?: string;
+    isPlaying: boolean;
+}
+
+export default function StartPauseButton({
+    functionOnClick,
+    className,
+    isPlaying,
+}: StartPauseButtonProps) {
     return (
         <TooltipProvider delayDuration={100}>
             <Tooltip>
@@ -29,14 +26,15 @@ export function AddButton() {
                     <Button
                         variant="outline"
                         size="icon"
-                        onClick={handleCreate}
                         className="button_menu"
+                        onClick={functionOnClick}
+                        type="button"
                     >
-                        <Plus className="h-[1.2rem] w-[1.2rem] transition-all dark:scale-100 text-black dark:text-white" />
+                        {isPlaying ? <PauseIcon /> : <PlayIcon />}
                     </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                    <p>Create Process</p>
+                    <p> {isPlaying ? "Pausar Autoplay" : "Iniciar Autoplay"}</p>
                 </TooltipContent>
             </Tooltip>
         </TooltipProvider>

@@ -1,6 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function ReturnButton() {
     const router = useRouter();
@@ -8,8 +14,22 @@ export default function ReturnButton() {
         router.push(`/`);
     }
     return (
-        <Button onClick={handleReturn} variant="outline" size="icon">
-            <ChevronLeft className="h-4 w-4" />
-        </Button>
-    )
+        <TooltipProvider delayDuration={100}>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button
+                        onClick={handleReturn}
+                        variant="outline"
+                        size="icon"
+                        className="button_menu ml-3 mt-3"
+                    >
+                        <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent className="ml-3">
+                    <p>Voltar ao menu</p>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
+    );
 }

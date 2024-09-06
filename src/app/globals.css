@@ -69,17 +69,22 @@
 }
 
 .animation_success {
-  @apply shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 duration-500 ease-in-out dark:border-2 dark:hover:border-green-500 dark:hover:shadow-green-500/50;
+  @apply shadow-lg delay-150 hover:shadow-2xl transition transform hover:scale-105 duration-500 ease-in-out dark:border-2 dark:hover:border-green-500 dark:hover:shadow-green-500/50;
 }
 .animation_failed {
-  @apply shadow-lg hover:shadow-2xl transition-shadow  transform hover:scale-105 duration-500 ease-in-out dark:border-2 dark:hover:border-red-500 dark:hover:shadow-red-500/50;
+  @apply shadow-lg delay-150 hover:shadow-2xl transition  transform hover:scale-105 duration-500 ease-in-out dark:border-2 dark:hover:border-red-500 dark:hover:shadow-red-500/50;
 }
 .animation_default {
-  @apply shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 duration-500 ease-in-out dark:border-2 dark:hover:border-gray-500 dark:hover:shadow-gray-500/50;
+  @apply shadow-lg delay-150 hover:shadow-2xl transition transform hover:scale-105 duration-500 ease-in-out dark:border-2 dark:hover:border-gray-500 dark:hover:shadow-gray-500/50;
 }
 .animation_unsyncronized {
-  @apply shadow-lg hover:shadow-2xl transition-shadow transform hover:scale-105 duration-500 ease-in-out dark:border-2 dark:hover:border-yellow-500 dark:hover:shadow-yellow-500/50;
+  @apply shadow-lg delay-150 hover:shadow-2xl transition transform hover:scale-105 duration-500 ease-in-out dark:border-2 dark:hover:border-yellow-500 dark:hover:shadow-yellow-500/50;
 }
 .animation_skeleton {
  @apply shadow-lg bg-gray-200 animate-pulse dark:bg-gray-700 rounded-lg;
 }
+.button_menu {
+  @apply shadow-lg  hover:shadow-2xl dark:hover:shadow-white transition transform hover:scale-125 duration-700 ease-in-out border-2 dark:hover:border-gray-700;
+}
+
+

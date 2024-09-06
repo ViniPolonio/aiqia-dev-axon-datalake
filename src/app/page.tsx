@@ -1,98 +1,240 @@
-"use client"
+"use client";
 
 import { CardWithData } from "./CardWithData/CardWithData";
-import { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { SearchAndFilter } from "./SearchAndFilter/SearchAndFilter";
 import { ModeToggle } from "@/components/ui/ModeToggle";
 import { AddButton } from "@/components/botoes/AddButton/AddButton";
-import { TimeButton } from "@/components/botoes/TImeButton/TimeButton";
-import { getAllConfigsTable } from "@/app/services/configurationTable"; 
+import { getControlConfig } from "@/app/services/controlConfig";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import Autoplay from "embla-carousel-autoplay";
 
+import {
+    Carousel,
+    CarouselContent,
+    CarouselItem,
+    CarouselNext,
+    CarouselPrevious,
+} from "@/components/ui/carousel";
+import { PauseIcon, PlayIcon } from "lucide-react";
+import StartPauseButton from "@/components/botoes/StartPauseButton/StartPauseButton";
 
 export type Data = {
-  id: number;
-  oracle_name: string;
-  mysql_name: string;
-  active: number;
-  status: number;
-  created_at: Date;
-  finished_at: Date;
-}
+    id: number;
+    process_name: string;
+    active: number;
+    status: number;
+    // interval_description: Array<string>;
+    interval_description: string;
+    created_at: Date;
+    finished_at: Date;
+    lastLogs: Array<any>;
+    activated_based_timer: number;
+};
 export default function Home() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [data, setData] = useState<Array<Data>>([]);
-  const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [data, setData] = useState<Array<Data>>([]);
+    const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const result = await getAllConfigsTable();
-        const configTables = result.data.map((item: any) => ({
-          id: item.config_data.id,
-          oracle_name: item.config_data.oracle_name,
-          mysql_name: item.config_data.mysql_name,
-          active: item.config_data.active,
-          status: item.config_data.success, 
-          created_at: new Date(item.config_data.created_at),
-          finished_at: new Date(item.config_data.finished_at),
-      }));
-        setData(configTables)
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
+    const plugin = React.useRef(
+        Autoplay({ delay: 1000, stopOnInteraction: true, playOnInit: false })
+    );
+    const [isPlaying, setIsPlaying] = useState(false);
+
+    const fetchData = async (nextCursor = null) => {
+        setLoading(true);
+        try {
+            const request = await getControlConfig();
+            if (request.status === 200) {
+                const response = request.data;
+                const data = response.data;
+                console.log(data[5].config_data.interval_status);
+
+                const configTables = data.map((item: any) => ({
+                    id: item.config_data.id,
+                    process_name: item.config_data.process_name,
+                    active: item.config_data.active,
+                    status:
+                        item.logs === null
+                            ? 2
+                            : item.config_data.interval_status === 1
+                            ? item.logs[0].success
+                            : 3,
+                    activated_based_timer: item.config_data.interval_status,
+                    created_at: new Date(item.config_data.created_at),
+                    finished_at:
+                        item.logs === null
+                            ? new Date(0)
+                            : new Date(item.logs[0].finished_at),
+                    lastLogs: item.logs === null ? [] : item.logs,
+                    interval_description: item.config_data.interval_description,
+                    // interval_description: [
+                    //     "1 minutri",
+                    //     "2 horas",
+                    //     "4 dias",
+                    //     "2 horas",
+                    //     "4 dias",
+                    // ],
+                }));
+                
+                setData((prevData) => {
+                    const combinedData = [...prevData];
+
+                    configTables.forEach((newItem: Data) => {
+                        const exists = combinedData.some(
+                            (item) => item.id === newItem.id
+                        );
+                        if (!exists) {
+                            combinedData.push(newItem);
+                        }
+                    });
+
+                    return combinedData;
+                });
+                // console.log(configTables);
+
+                // setData((prevData) => [...prevData, ...configTables]);
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
+    };
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    const filteredData = data.filter((item) =>
+        item.process_name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const toggleAutoplay = useCallback(() => {
+        const autoplay = plugin.current;
+        if (!autoplay) return;
+        console.log("autoplçy " + plugin.current.isPlaying() + " " + isPlaying);
+
+        if (autoplay.isPlaying()) {
+            autoplay.stop();
+            setIsPlaying(false);
+        } else {
+            autoplay.play();
+            setIsPlaying(true);
+            console.log(
+                "autoplçy deposiiiiiii " +
+                    plugin.current.isPlaying() +
+                    " " +
+                    isPlaying
+            );
+        }
+    }, []);
+
+    const chanceButtonState = () => {
+        const autoplay = plugin.current;
+        if (!autoplay) return;
+
+        console.log("autoplçy " + autoplay.isPlaying() + " " + isPlaying);
+
+        if (autoplay.isPlaying()) {
+            setIsPlaying(false);
+            autoplay.stop();
+        }
+        console.log("autoplçy " + autoplay.isPlaying() + " " + isPlaying);
     };
 
-    fetchData();
-  }, []);
-  const filteredData = data
-  .filter(item => 
-    item.oracle_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    item.mysql_name.toLowerCase().includes(searchTerm.toLowerCase())
-  )
-  .sort((a, b) => a.active === b.active ? 0 : a.active ? -1 : 1);
-
-  return (
-    <main>
-      <div className="flex justify-around p-3">
-        <ModeToggle/>
-        <AddButton/>
-        <TimeButton/>
-        <SearchAndFilter searchTerm={searchTerm} onSearchChange={(e) => setSearchTerm(e.target.value)} />
-      </div>
-      <div className=" flex flex-wrap justify-center">
-
-      {loading ? (
-          Array.from({ length: 10 }).map((_, index) => (
-            <div key={index} className="p-5 flex-grow-0">
-              <CardWithData 
-                loading={true}
-                id={1}
-                date={new Date("01-01-2024 00:00:00")}
-                active={0}
-                status={1}
-                nomeOracle={""}
-                nomeInterno={""} 
-              />
+    return (
+        <main>
+            <div className="flex justify-around p-3 h-1/5">
+                <ModeToggle />
+                <AddButton />
+                <StartPauseButton
+                    functionOnClick={toggleAutoplay}
+                    isPlaying={isPlaying}
+                />
+                <SearchAndFilter
+                    searchTerm={searchTerm}
+                    onSearchChange={(e) => setSearchTerm(e.target.value)}
+                />
             </div>
-          ))
-        ) : (
-          filteredData.map((item) => (
-            <div key={item.id} className="p-5 flex-grow-0">
-              <CardWithData
-                id={item.id}
-                date={item.status == 2 ? item.created_at : item.finished_at}
-                active={item.active}
-                status={item.status}
-                nomeOracle={item.oracle_name}
-                nomeInterno={item.mysql_name}
-              />
+            <div className="flex justify-center items-center h-[85vh]">
+                <div className="w-[100vw] flex justify-center h-full">
+                    <Carousel
+                        opts={{
+                            align: "start",
+                            loop: true,
+                        }}
+                        className="w-[90vw]  "
+                        plugins={[plugin.current]}
+                    >
+                        <CarouselContent
+                            className=" p-3"
+                            onPointerDown={chanceButtonState}
+                        >
+                            {loading
+                                ? Array.from({
+                                      length: 10,
+                                  }).map((_, index) => (
+                                      <CarouselItem
+                                          key={index}
+                                          className="md:basis-1/2 lg:basis-1/3  p-6 pb-10"
+                                      >
+                                          <div
+                                              key={index}
+                                              className="p-3 flex-grow-0"
+                                          >
+                                              <CardWithData
+                                                  loading={true}
+                                                  id={1}
+                                                  process_name={
+                                                      "Nome do processo"
+                                                  }
+                                                  date={
+                                                      new Date(
+                                                          "01-01-2024 00:00:00"
+                                                      )
+                                                  }
+                                                  active={0}
+                                                  status={1}
+                                              />
+                                          </div>
+                                      </CarouselItem>
+                                  ))
+                                : filteredData.map((item, index) => (
+                                      <CarouselItem
+                                          key={index}
+                                          className="md:basis-1/2 lg:basis-1/3  p-6 pb-10"
+                                      >
+                                          <div
+                                              key={item.id}
+                                              className="p-3 flex-grow-0"
+                                          >
+                                              <CardWithData
+                                                  id={item.id}
+                                                  date={
+                                                      item.status == 2
+                                                          ? item.created_at
+                                                          : item.finished_at
+                                                  }
+                                                  lastLogs={item.lastLogs}
+                                                  active={item.active}
+                                                  interval_description={
+                                                      item.interval_description
+                                                  }
+                                                  status={item.status}
+                                                  process_name={
+                                                      item.process_name
+                                                  }
+                                              />
+                                          </div>
+                                      </CarouselItem>
+                                  ))}
+                        </CarouselContent>
+                        <CarouselPrevious />
+                        <CarouselNext />
+                    </Carousel>
+                </div>
             </div>
-          ))
-        )}
-      
-      </div>
-    </main>
-  );
+        </main>
+    );
 }

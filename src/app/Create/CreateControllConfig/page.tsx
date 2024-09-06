@@ -1,15 +1,14 @@
 "use client"
 
 import ReturnButton from "@/components/botoes/ReturnButton/ReturnButton";
-import { CreateTableForm } from "./CreateTableForm/CreateTableForm";
+import { CreateControllConfigForm } from "./CreateControllConfigForm/CreateTableForm";
 
 export default function CreateTable() {
-    return(
+    return (
         <main>
-            <ReturnButton/>
+            <ReturnButton />
             <div className=" flex justify-center content-center ">
-                <CreateTableForm/>
             </div>
         </main>
-    )
+    );
 }

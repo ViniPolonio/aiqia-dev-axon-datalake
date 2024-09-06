@@ -6,12 +6,11 @@ import * as React from "react";
 import { Trash2 } from "lucide-react"; // Certifique-se de que o ícone está disponível no pacote
 
 import { Button } from "@/components/ui/button";
-import { deleteTable } from "@/app/services/configurationTable";
+import { deleteConfig } from "@/app/services/controlConfig";
 import { useRouter } from "next/navigation";
 
 interface DeleteButtonProps{
     id: number;
-    disabled: boolean;
 }
 
 
@@ -21,7 +20,7 @@ export function DeleteButtonTable({
     const router = useRouter();
     const handleDelete = async () => {
         try {
-            const response = deleteTable(id)
+            const response = deleteConfig(id);
             router.push(`/`)
         } catch (error) {
             console.error("Erro ao deletar tabela: ", error);
