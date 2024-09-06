@@ -73,9 +73,9 @@ class SyncControlConfigController extends Controller
                     $intervalDescription = $configTime['interval_description'];
 
                     $intervalInMinutes = match ($intervalType) {
-                        1 => $intervalValue,            
-                        2 => $intervalValue * 60,       
-                        3 => $intervalValue * 1440,     
+                        1 => $intervalValue,            // Minutes
+                        2 => $intervalValue * 60,       // Hours to minutes
+                        3 => $intervalValue * 1440,     // Days to minutes
                         default => null,                
                     };
 
@@ -125,8 +125,8 @@ class SyncControlConfigController extends Controller
         }
     }
 
-
-    public function orderIds($configs) {
+    public function orderIds($configs) 
+    {
         try {
             $configs = collect($configs);
             $orderedConfigs = $configs->sortBy('id');
@@ -156,7 +156,7 @@ class SyncControlConfigController extends Controller
                 ], 400); 
             }
 
-            $consultTimeConfig = collect($this->consultTimer([$id])); 
+            $consultTimeConfig = collect($this->consultTimer([$id]));
 
             $syncControl = app(SyncControlLogsController::class)->returnShowTableConfig($id);
             $finishedAt = $syncControl ? $syncControl->finished_at : null;
@@ -173,28 +173,34 @@ class SyncControlConfigController extends Controller
             if ($finishedAt && $consultTimeConfig) {
                 $configTime = $consultTimeConfig->firstWhere('sync_control_config_id', $id);
                 if ($configTime) {
-                    $intervalType = $configTime['interval_type'];
-                    $intervalValue = $configTime['interval_value'];
                     $intervalDescription = $configTime['interval_description'];
+                    
+                    $intervalInMinutes = 0;
+                    
+                    if (strpos($intervalDescription, 'dia(s)') !== false) {
+                        preg_match('/(\d+)\s+dia\(s\)/', $intervalDescription, $matches);
+                        $intervalInMinutes += ($matches[1] ?? 0) * 1440; 
+                    }
 
-                    $intervalInMinutes = match ($intervalType) {
-                        1 => $intervalValue,            
-                        2 => $intervalValue * 60,       
-                        3 => $intervalValue * 1440,     
-                        default => null,                
-                    };
+                    if (strpos($intervalDescription, 'hora(s)') !== false) {
+                        preg_match('/(\d+)\s+hora\(s\)/', $intervalDescription, $matches);
+                        $intervalInMinutes += ($matches[1] ?? 0) * 60; 
+                    }
 
-                    if ($intervalInMinutes) {
-                        $timeDifference = \Carbon\Carbon::now()->diffInMinutes(\Carbon\Carbon::parse($finishedAt));
+                    if (strpos($intervalDescription, 'minuto(s)') !== false) {
+                        preg_match('/(\d+)\s+minuto\(s\)/', $intervalDescription, $matches);
+                        $intervalInMinutes += ($matches[1] ?? 0); 
+                    }
 
-                        if ($timeDifference > $intervalInMinutes) {
-                            return response()->json([
-                                'status' => 0,
-                                'data' => $return,
-                                'finished_at' => $finishedAt,
-                                'interval_description' => $intervalDescription,
-                            ], 200);
-                        }
+                    $timeDifference = \Carbon\Carbon::now()->diffInMinutes(\Carbon\Carbon::parse($finishedAt));
+
+                    if ($timeDifference > $intervalInMinutes) {
+                        return response()->json([
+                            'status' => 0,
+                            'data' => $return,
+                            'finished_at' => $finishedAt,
+                            'interval_description' => $intervalDescription,
+                        ], 200);
                     }
                 }
             }
@@ -203,7 +209,7 @@ class SyncControlConfigController extends Controller
                 'status' => 1,
                 'data' => $return,
                 'finished_at' => $finishedAt,
-                'interval_description' => $intervalDescription,
+                'interval_description' => $intervalDescription ?? null,
             ], 200);
         } 
         catch (\Exception $e) {
@@ -213,6 +219,7 @@ class SyncControlConfigController extends Controller
             ], 500);
         }
     }
+
 
 
     public function store(SyncControlConfigCreateRequest $request) 
@@ -313,8 +320,8 @@ class SyncControlConfigController extends Controller
         }
     }
 
-    public function acTiveOrDesactive($id, Request $request) {
-        
+    public function acTiveOrDesactive($id, Request $request) 
+    {
         try {
             $validatedData = $request->validate([
                 'active' => 'required|integer'
@@ -352,34 +359,51 @@ class SyncControlConfigController extends Controller
         }
     }
 
-    public function consultTimer($ids) {
+    public function consultTimer($ids) 
+    {
         $consultTimeConfig = SyncControlTimeConfig::whereIn('sync_control_config_id', $ids)
             ->where('active', 1)
             ->get();
-    
-    
-        $arrayFormated = $consultTimeConfig->map(function ($item) {
-            $intervalTypes = [
-                1 => 'minuto(s)',
-                2 => 'hora(s)',
-                3 => 'dia(s)',
+
+        $arrayGrouped = $consultTimeConfig->groupBy('sync_control_config_id')->map(function ($group) {
+            $intervalSum = [
+                'dias' => 0,
+                'horas' => 0,
+                'minutos' => 0,
             ];
-    
-            $intervalTypeDescription = isset($intervalTypes[$item->interval_type]) 
-                ? $intervalTypes[$item->interval_type] 
-                : 'desconhecido';
-    
+
+            foreach ($group as $item) {
+                if ($item->interval_type == 3) { 
+                    $intervalSum['dias'] += $item->interval_value;
+                } elseif ($item->interval_type == 2) { 
+                    $intervalSum['horas'] += $item->interval_value;
+                } elseif ($item->interval_type == 1) { 
+                    $intervalSum['minutos'] += $item->interval_value;
+                }
+            }
+
+            $intervalDescription = [];
+            if ($intervalSum['dias'] > 0) {
+                $intervalDescription[] = $intervalSum['dias'] . ' dia(s)';
+            }
+            if ($intervalSum['horas'] > 0) {
+                $intervalDescription[] = $intervalSum['horas'] . ' hora(s)';
+            }
+            if ($intervalSum['minutos'] > 0) {
+                $intervalDescription[] = $intervalSum['minutos'] . ' minuto(s)';
+            }
             return [
-                'sync_control_config_id' => $item->sync_control_config_id,
-                'interval_description' => $item->interval_value . ' ' . $intervalTypeDescription,
-                'interval_type' => $item->interval_type,
-                'interval_value' => $item->interval_value,
-                'active' => $item->active,
+                'sync_control_config_id' => $group->first()->sync_control_config_id,
+                'interval_description' => implode(' ', $intervalDescription),
+                'active' => $group->first()->active,
+                'interval_type' => $group->first()->interval_type,
+                'interval_value' => $group->first()->interval_value,
             ];
         });
 
-        return $arrayFormated->toArray(); 
+        return $arrayGrouped->toArray(); 
     }
+    
     
 }
     
