@@ -130,7 +130,7 @@ class SyncControlLogsController extends Controller
                 ], 400);
             }
 
-            $logs = SyncControlLog::where('sync_control_config_id', $id)
+            $logs = SyncControlLog::where('sync_control_config_id', $id)->where('finished_at', '!=', '')
                 ->orderBy('finished_at', 'desc')
                 ->cursorPaginate($perPage, ['*'], 'cursor', $cursor);
 
