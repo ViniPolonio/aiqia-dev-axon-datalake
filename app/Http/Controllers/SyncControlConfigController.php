@@ -42,11 +42,15 @@ class SyncControlConfigController extends Controller
                 }
 
                 $lastLog = SyncControlLog::where('sync_control_config_id', $config->id)
+                    ->whereNotNull('finished_at')
+                    ->where('finished_at', '!=', '')
                     ->orderBy('finished_at', 'desc')
                     ->select(['sync_control_config_id', 'success', 'runtime_second', 'finished_at', 'error'])
                     ->first();
 
                 $logs = SyncControlLog::where('sync_control_config_id', $config->id)
+                    ->whereNotNull('finished_at')
+                    ->where('finished_at', '!=', '')
                     ->orderBy('finished_at', 'desc')
                     ->take(20)
                     ->select(['sync_control_config_id', 'success', 'runtime_second', 'finished_at', 'error'])
@@ -62,37 +66,23 @@ class SyncControlConfigController extends Controller
                     ->values()
                     ->toArray();
 
-                $configTime = $consultTimeConfig->firstWhere('sync_control_config_id', $config->id);
+                $configTime = $consultTimeConfig->where('sync_control_config_id', $config->id)->first();
 
-                $intervalDescription = 'No timer configured';
-                $success = 2;
+                $intervalDays = $configTime['interval_day'] ?? 0;
+                $intervalHours = $configTime['interval_time'] ?? 0;
+                $intervalMinutes = $configTime['interval_minute'] ?? 0;
 
-                if ($configTime) {
-                    $intervalType = $configTime['interval_type'];
-                    $intervalValue = $configTime['interval_value'];
-                    $intervalDescription = $configTime['interval_description'];
+                $intervalInMinutes = ($intervalDays * 1440) + ($intervalHours * 60) + $intervalMinutes;
 
-                    $intervalInMinutes = match ($intervalType) {
-                        1 => $intervalValue,            // Minutes
-                        2 => $intervalValue * 60,       // Hours to minutes
-                        3 => $intervalValue * 1440,     // Days to minutes
-                        default => null,                
-                    };
+                if ($intervalInMinutes && $lastLog) {
+                    $timeDifference = \Carbon\Carbon::now()->diffInMinutes(\Carbon\Carbon::parse($lastLog->finished_at));
 
-                    if ($intervalInMinutes && $lastLog) {
-                        $timeDifference = \Carbon\Carbon::now()->diffInMinutes(\Carbon\Carbon::parse($lastLog->finished_at));
-
-                        if ($timeDifference > $intervalInMinutes) {
-                            $lastLog->success = 0;  
-                        }
+                    if ($timeDifference > $intervalInMinutes) {
+                        $lastLog->success = 0;  
                     }
                 }
 
-                if ($lastLog) {
-                    $success = $lastLog->success == 1 ? 1 : 0; 
-                } else {
-                    $success = 0;
-                }
+                $success = $lastLog ? ($lastLog->success == 1 ? 1 : 0) : 0;
 
                 $configData = [
                     'id'            => $config->id,
@@ -101,8 +91,10 @@ class SyncControlConfigController extends Controller
                     'created_at'    => $config->created_at,
                     'updated_at'    => $config->updated_at,
                     'deleted_at'    => $config->deleted_at,
-                    'interval_status' => $success,  
-                    'interval_description' => $intervalDescription
+                    'interval_status' => $success,
+                    'interval_days' => $intervalDays, 
+                    'interval_hours' => $intervalHours,
+                    'interval_minutes' => $intervalMinutes,
                 ];
 
                 $data[] = [
@@ -219,8 +211,6 @@ class SyncControlConfigController extends Controller
             ], 500);
         }
     }
-
-
 
     public function store(SyncControlConfigCreateRequest $request) 
     {
@@ -392,18 +382,19 @@ class SyncControlConfigController extends Controller
             if ($intervalSum['minutos'] > 0) {
                 $intervalDescription[] = $intervalSum['minutos'] . ' minuto(s)';
             }
+
             return [
                 'sync_control_config_id' => $group->first()->sync_control_config_id,
-                'interval_description' => implode(' ', $intervalDescription),
-                'active' => $group->first()->active,
                 'interval_type' => $group->first()->interval_type,
                 'interval_value' => $group->first()->interval_value,
+                'interval_day' => $intervalSum['dias'],
+                'interval_time' => $intervalSum['horas'],
+                'interval_minute' => $intervalSum['minutos'],
+                'interval_description' => implode(' ', $intervalDescription),
+                'active' => $group->first()->active,
             ];
         });
 
         return $arrayGrouped->toArray(); 
     }
-    
-    
 }
-    

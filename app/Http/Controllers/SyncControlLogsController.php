@@ -26,7 +26,6 @@ class SyncControlLogsController extends Controller
     public function consultingExecute($ids) 
     {
         $results = []; 
-
         try {
             foreach ($ids as $id) {
                 if (!is_numeric($id)) {
@@ -81,38 +80,45 @@ class SyncControlLogsController extends Controller
                 ], 404);
             }
 
-            $config->interval_description = $configTime['interval_description'] ?? 0;
-            $config->interval_status = $configTime ? '' : 0; 
+            $intervalDays = $configTime['interval_day'] ?? 0;
+            $intervalHours = $configTime['interval_time'] ?? 0;
+            $intervalMinutes = $configTime['interval_minute'] ?? 0;
 
-            if ($configTime) {
-                $intervalType = $configTime['interval_type'];
-                $intervalValue = $configTime['interval_value'];
-                $intervalDescription = $configTime['interval_description'];
+            $intervalInMinutes = ($intervalDays * 1440) + ($intervalHours * 60) + $intervalMinutes;
 
-                $intervalInMinutes = match ($intervalType) {
-                    1 => $intervalValue,            
-                    2 => $intervalValue * 60,       
-                    3 => $intervalValue * 1440,     
-                    default => null,                
-                };
+            $lastLog = SyncControlLog::where('sync_control_config_id', $id)
+                ->whereNotNull('finished_at')
+                ->where('finished_at', '!=', '')
+                ->orderBy('finished_at', 'desc')
+                ->select(['finished_at'])
+                ->first();
 
-                $lastLog = SyncControlLog::where('sync_control_config_id', $id)
-                    ->orderBy('finished_at', 'desc')
-                    ->select(['finished_at'])
-                    ->first();
+            $inactiveMessage = '';
 
-                $inactiveMessage = '';
+            if ($intervalInMinutes && $lastLog && $lastLog->finished_at) {
+                $timeDifference = \Carbon\Carbon::now()->diffInMinutes(\Carbon\Carbon::parse($lastLog->finished_at));
 
-                if ($intervalInMinutes && $lastLog && $lastLog->finished_at) {
-                    $timeDifference = \Carbon\Carbon::now()->diffInMinutes(\Carbon\Carbon::parse($lastLog->finished_at));
-
-                    if ($timeDifference > $intervalInMinutes) {
-                        $inactiveMessage = 2;
-                    }
+                if ($timeDifference > $intervalInMinutes) {
+                    $inactiveMessage = 2;
                 }
-
-                $config->interval_status = $inactiveMessage ?: 1; 
             }
+
+            $config->interval_status = $inactiveMessage ?: 1; 
+
+            $intervalDescription = '';
+            if ($intervalDays > 0) {
+                $intervalDescription .= "{$intervalDays} dia(s) ";
+            }
+            if ($intervalHours > 0) {
+                $intervalDescription .= "{$intervalHours} hora(s) ";
+            }
+            if ($intervalMinutes > 0) {
+                $intervalDescription .= "{$intervalMinutes} minuto(s) ";
+            }
+
+            $config->interval_days = $intervalDays;
+            $config->interval_hours = $intervalHours;
+            $config->interval_minutes = $intervalMinutes;
 
             $cursor = $request->input('cursor'); 
             $perPage = 20; 
@@ -154,6 +160,7 @@ class SyncControlLogsController extends Controller
             ], 500);
         }
     }
+
 
     public function returnShowTableConfig($id) {
         try {
