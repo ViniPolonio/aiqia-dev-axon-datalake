@@ -20,6 +20,11 @@ import {
 import { PauseIcon, PlayIcon } from "lucide-react";
 import StartPauseButton from "@/components/botoes/StartPauseButton/StartPauseButton";
 
+interface TimeConfigs {
+    value: number;
+    status: string;
+}
+
 export type Data = {
     id: number;
     process_name: string;
@@ -31,6 +36,7 @@ export type Data = {
     finished_at: Date;
     lastLogs: Array<any>;
     activated_based_timer: number;
+    timeConfigs: Array<TimeConfigs>
 };
 export default function Home() {
     const [searchTerm, setSearchTerm] = useState("");
@@ -38,7 +44,7 @@ export default function Home() {
     const [loading, setLoading] = useState(true);
 
     const plugin = React.useRef(
-        Autoplay({ delay: 1000, stopOnInteraction: true, playOnInit: false })
+        Autoplay({ delay: 3000, stopOnInteraction: true, playOnInit: false })
     );
     const [isPlaying, setIsPlaying] = useState(false);
 
@@ -51,24 +57,43 @@ export default function Home() {
                 const data = response.data;
                 console.log(data[5].config_data.interval_status);
 
-                const configTables = data.map((item: any) => ({
-                    id: item.config_data.id,
-                    process_name: item.config_data.process_name,
-                    active: item.config_data.active,
-                    status:
-                        item.logs === null
-                            ? 2
-                            : item.config_data.interval_status === 1
-                            ? item.logs[0].success
-                            : 3,
-                    activated_based_timer: item.config_data.interval_status,
-                    created_at: new Date(item.config_data.created_at),
-                    finished_at:
-                        item.logs === null
-                            ? new Date(0)
-                            : new Date(item.logs[0].finished_at),
-                    lastLogs: item.logs === null ? [] : item.logs,
-                    interval_description: item.config_data.interval_description,
+                const configTables = data.map((item: any) => {
+                   const timeConfigs = [
+                       item.config_data.interval_in_minutes,
+                       item.config_data.interval_in_hours,
+                       item.config_data.interval_in_days,
+                   ];
+                    return {
+                        id: item.config_data.id,
+                        process_name: item.config_data.process_name,
+                        active: item.config_data.active,
+                        timeConfigs: timeConfigs,
+                        status:
+                            item.logs === null
+                                ? 2
+                                : timeConfigs.some(
+                                      (timeConfig: TimeConfigs) =>{
+                                        
+                                         return (
+                                             timeConfig.status === "inactive" &&
+                                             timeConfig.value !== 0
+                                         );
+                                        
+                                    }
+                                  ) || timeConfigs.reduce((acc, timeConfig) => acc + timeConfig.value, 0) === 0
+                                ? 3
+                                : item.logs[0].success,
+                        activated_based_timer: item.config_data.interval_status,
+                        created_at: new Date(item.config_data.created_at),
+                        finished_at:
+                            item.logs === null
+                                ? new Date(0)
+                                : new Date(item.logs[0].finished_at),
+                        lastLogs: item.logs === null ? [] : item.logs,
+                        interval_description:
+                            item.config_data.interval_description,
+                    };
+                   
                     // interval_description: [
                     //     "1 minutri",
                     //     "2 horas",
@@ -76,7 +101,9 @@ export default function Home() {
                     //     "2 horas",
                     //     "4 dias",
                     // ],
-                }));
+                });
+                console.log(configTables)
+                
                 
                 setData((prevData) => {
                     const combinedData = [...prevData];

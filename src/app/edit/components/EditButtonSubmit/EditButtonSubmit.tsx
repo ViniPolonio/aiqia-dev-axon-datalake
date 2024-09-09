@@ -13,6 +13,7 @@ export const EditButtonSubmit = ({ isSubmitting, editSuccess, editFailed, disabl
           <Button
               className="w-full transition duration-700 border-2  ease-in-out bg-gray-900 hover:bg-gray-700 hover:border-white text-white"
               disabled={isSubmitting || disabled}
+              type="submit"
           >
               {isSubmitting ? "Salvando..." : "Salvar"}
           </Button>

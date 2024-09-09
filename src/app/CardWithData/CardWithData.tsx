@@ -60,6 +60,7 @@ export function CardWithData({
     const firstData = lastLogs[0]?.finished_at
         ? format(new Date(lastLogs[0].finished_at), "dd/MM/yyyy")
         : "Data não disponível";
+    const reversedLogs = lastLogs.slice().reverse();
 
     const lastData =
         lastLogs.length > 10
@@ -164,7 +165,7 @@ export function CardWithData({
             ? "border dark:border-slate-900 rounded shadow-lg delay-200 hover:shadow-2xl transition transform duration-500 ease-in-out dark:border-2 dark:hover:border-red-500 dark:hover:shadow-red-500/50 p-2"
             : status === 1
             ? "border dark:border-slate-900 rounded shadow-lg delay-200 hover:shadow-2xl transition transform duration-500 ease-in-out dark:border-2 dark:hover:border-green-500 dark:hover:shadow-green-500/50 p-2"
-            : "border-yellow-300";
+            : "border dark:border-slate-900 rounded shadow-lg delay-200 hover:shadow-2xl transition transform duration-500 ease-in-out dark:border-2 dark:hover:border-yellow-500 dark:hover:shadow-yellow-500/50 p-2";
     const statusClass =
         active === 0
             ? "text-center text-balance text-gray-600"
@@ -240,9 +241,7 @@ export function CardWithData({
                                             }
                                         >
                                             <GraphicLastDataLine
-                                                logs={lastLogs
-                                                    .slice(0, 10)
-                                                    .reverse()}
+                                                logs={lastLogs.slice(0, 10).reverse()}
                                                 success={status}
                                                 active={active}
                                             />
@@ -268,7 +267,7 @@ export function CardWithData({
                                             : "Status de sincronização: "}
                                     </CardDescription>
                                     <GraphicLastDataSpark
-                                        logs={lastLogs}
+                                        logs={reversedLogs}
                                         success={status}
                                         active={active}
                                     />
@@ -321,7 +320,7 @@ export function CardWithData({
                                         >
                                             <GraphicLastDataLine
                                                 logs={lastLogs
-                                                    .slice(0, 10)
+                                                    .slice(10, 20)
                                                     .reverse()}
                                                 success={status}
                                                 active={active}
@@ -340,7 +339,7 @@ export function CardWithData({
                             </CardDescription>
 
                             <GraphicLastDataSpark
-                                logs={lastLogs.slice().reverse()}
+                                logs={reversedLogs}
                                 success={status}
                                 active={active}
                             />

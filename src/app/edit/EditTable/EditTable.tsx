@@ -127,7 +127,7 @@ export default function EditTable({ process_name }: EditTableProps) {
                 {loading ? (
                     <EditFormSkeleton cardHeight="h-[300px]" />
                 ) : (
-                    <Card className="w-[400px] h-[300px]">
+                    <Card className=" w-[60vw] h-[300px]">
                         <CardHeader>
                             <CardTitle>Edição tabela de configuração</CardTitle>
                             <CardDescription>

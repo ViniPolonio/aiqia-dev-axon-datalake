@@ -1,48 +1,52 @@
-"use client"
-
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
-
-import { Button } from "@/components/ui/button"
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import EditTable from "./EditTable/EditTable"
-import EditTime from "./EditTime/EditTime"
-
+import { useEffect, useState } from 'react';
+import { getControlTimeById } from '@/app/services/controlTimeConfig';
+import { CardEditTime } from './CardEditTime/CardEditTime';
+import EditTable from './EditTable/EditTable';
 
 export default function EditForm() {
-  
-  
-  return (
-    <div className="flex justify-between space-x-24 p-5">
-      <EditTable />
-      
-      <EditTime/>
-    </div>
-  )
+    const [loading, setLoading] = useState(true);
+    const [allDates, setAllDates] = useState([]);
+
+    useEffect(() => {
+        (async () => {
+            setLoading(true);
+            try {
+                const path = window.location.pathname;
+                const extractedId = path.split('/').pop();
+
+                if (!extractedId) {
+                    console.error('ID não encontrado na URL');
+                    return;
+                }
+
+                const result = await getControlTimeById(extractedId);
+                const data = result.message;
+                setAllDates(data || []);
+                console.log(data);
+            } catch (error) {
+                console.error('Erro ao buscar dados:', error);
+                setAllDates([]);
+            } finally {
+                setLoading(false);
+            }
+        })();
+    }, []);
+
+    return (
+        <div className="flex flex-col items-center justify-between">
+            <div className="p-2">
+                <EditTable />
+            </div>
+
+            <div className="p-2 flex flex-row">
+                {loading ? (
+                    <h1>carregando...</h1>
+                ) : (
+                    allDates.map((date, index) => (
+                        <CardEditTime key={index} date={date} />
+                    ))
+                )}
+            </div>
+        </div>
+    );
 }

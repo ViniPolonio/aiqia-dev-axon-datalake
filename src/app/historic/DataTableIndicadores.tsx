@@ -592,8 +592,7 @@ export default function DataTable() {
                         showButton={false}
                     />
                 </div>
-            ) 
-            : dataTable ? (
+            ) : dataTable ? (
                 <div className="flex justify-center items-center">
                     <CardWithData
                         id={dataTable.id}
@@ -608,7 +607,6 @@ export default function DataTable() {
                         showButton={false}
                         lastLogs={lastLogs.slice().reverse()}
                         interval_description={dataTable.interval_description}
-
                     />
                 </div>
             ) : (
@@ -631,10 +629,7 @@ export default function DataTable() {
             ) : (
                 <div>
                     <div className="flex justify-center items-center py-4">
-                        <DatePickerWithRange
-                            
-                            onDateChange={setDateRange}
-                        />
+                        <DatePickerWithRange onDateChange={setDateRange} />
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild></DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
@@ -669,7 +664,14 @@ export default function DataTable() {
                                     </h1>
                                 </div>
                             ) : (
-                                <ScrollArea className={`h-[${ 4 > filteredLogs.length ? filteredLogs.length * 10 : 40 }vh] w-full`}>
+                                <ScrollArea
+                                    className={`h-[${
+                                        filteredLogs.length > 4
+                                            ? 40
+                                            : filteredLogs.length * 10
+                                    }vh] w-full`}
+                                >
+                                    {/* <ScrollArea className={`h-[40vh] w-full`}> */}
                                     <Table className="overflow-auto">
                                         <TableHeader className="sticky top-0">
                                             {table
