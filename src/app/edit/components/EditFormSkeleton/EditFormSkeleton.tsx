@@ -46,9 +46,12 @@ export default function EditFormSkeleton({
               </div>
           )}
 
-          <div className=" p-4 border-t border-gray-200 dark:border-gray-600 flex content-center justify-center">
+          <div className=" p-4 border-t border-gray-200 dark:border-gray-600 flex content-center items-center justify-around">
               <div
                   className={`bg-gray-200 dark:bg-gray-600 ${buttonSize} rounded ml-2`}
+              ></div>
+              <div
+                  className={`bg-gray-200 dark:bg-gray-600 w-[30px] h-[30px] rounded ml-2`}
               ></div>
           </div>
       </div>

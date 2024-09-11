@@ -7,8 +7,7 @@ export default function EditForm() {
     const [loading, setLoading] = useState(true);
     const [allDates, setAllDates] = useState([]);
 
-    useEffect(() => {
-        (async () => {
+    const getData = async () => {
             setLoading(true);
             try {
                 const path = window.location.pathname;
@@ -29,7 +28,10 @@ export default function EditForm() {
             } finally {
                 setLoading(false);
             }
-        })();
+        }
+
+    useEffect(() => {
+        getData();
     }, []);
 
     return (
@@ -43,7 +45,11 @@ export default function EditForm() {
                     <h1>carregando...</h1>
                 ) : (
                     allDates.map((date, index) => (
-                        <CardEditTime key={index} date={date} />
+                        <CardEditTime
+                            onSave={getData}
+                            key={index}
+                            date={date}
+                        />
                     ))
                 )}
             </div>

@@ -30,12 +30,10 @@ export type Data = {
     process_name: string;
     active: number;
     status: number;
-    // interval_description: Array<string>;
-    interval_description: string;
+    interval_description: Array<string>;
     created_at: Date;
     finished_at: Date;
     lastLogs: Array<any>;
-    activated_based_timer: number;
     timeConfigs: Array<TimeConfigs>
 };
 export default function Home() {
@@ -72,35 +70,30 @@ export default function Home() {
                             item.logs === null
                                 ? 2
                                 : timeConfigs.some(
-                                      (timeConfig: TimeConfigs) =>{
-                                        
-                                         return (
-                                             timeConfig.status === "inactive" &&
-                                             timeConfig.value !== 0
-                                         );
-                                        
-                                    }
-                                  ) || timeConfigs.reduce((acc, timeConfig) => acc + timeConfig.value, 0) === 0
+                                      (timeConfig: TimeConfigs) => {
+                                          return (
+                                              timeConfig.status ===
+                                                  'inactive' &&
+                                              timeConfig.value !== 0
+                                          );
+                                      }
+                                  ) ||
+                                  timeConfigs.reduce(
+                                      (acc, timeConfig) =>
+                                          acc + timeConfig.value,
+                                      0
+                                  ) === 0
                                 ? 3
                                 : item.logs[0].success,
-                        activated_based_timer: item.config_data.interval_status,
                         created_at: new Date(item.config_data.created_at),
                         finished_at:
                             item.logs === null
                                 ? new Date(0)
                                 : new Date(item.logs[0].finished_at),
                         lastLogs: item.logs === null ? [] : item.logs,
-                        interval_description:
-                            item.config_data.interval_description,
+                        interval_description: timeConfigs,
                     };
                    
-                    // interval_description: [
-                    //     "1 minutri",
-                    //     "2 horas",
-                    //     "4 dias",
-                    //     "2 horas",
-                    //     "4 dias",
-                    // ],
                 });
                 console.log(configTables)
                 

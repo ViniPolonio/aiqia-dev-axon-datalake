@@ -125,7 +125,10 @@ export default function EditTable({ process_name }: EditTableProps) {
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                 {loading ? (
-                    <EditFormSkeleton cardHeight="h-[300px]" />
+                    <EditFormSkeleton
+                        cardHeight="w-[60vw] h-[300px]"
+                        buttonSize="w-[40vw] h-[5vh]"
+                    />
                 ) : (
                     <Card className=" w-[60vw] h-[300px]">
                         <CardHeader>

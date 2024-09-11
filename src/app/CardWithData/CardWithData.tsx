@@ -15,7 +15,7 @@ import { EditButton } from "@/components/botoes/EditButton/EditButton";
 import { PowerButton } from "@/components/botoes/PowerButton/PowerButton";
 import { GraphicLastDataSpark } from "./GraphicLastDataSpark/GraphicLastDataSpark";
 import { GraphicLastDataLine } from "./GraphicLastDataLine/GraphicLastDataLine";
-import Status from "./Status/Status";
+import StatusGeral from './StatusGeral/StatusGeral';
 import LastUpdate from "./LastUpdate/LastUpdate";
 import IntervalorSincronizacao from "./IntervalorSincronizacao/IntervalorSincronizacao";
 import ReturnUnsynchronized from "@/components/botoes/ReturnUnsynchronized/ReturnUnsynchronized";
@@ -26,8 +26,8 @@ interface CardWithDataProps {
     date: Date;
     active: number;
     status: number;
-    // interval_description?: Array<string>;
-    interval_description?: string;
+    interval_description?: Array<string>;
+    // interval_description?: string;
     showButton?: boolean;
     loading?: boolean;
     lastLogs?: Array<any>;
@@ -43,8 +43,8 @@ export function CardWithData({
     showButton = true,
     loading = false,
     lastLogs = [],
-    // interval_description = ["Sem dados","teste","teste"],
-    interval_description = "Sem dados",
+    interval_description = ["Sem dados","teste","teste"],
+    // interval_description = "Sem dados",
     activated_based_timer,
     unsyncronized = false,
 }: CardWithDataProps) {
@@ -190,8 +190,8 @@ export function CardWithData({
         <div className="relative">
             <Card
                 className={`${cardClass} ${
-                    unsyncronized && "cursor-not-allowed blur-sm"
-                } ${showButton ? "cursor-pointer" : ""} m-4`}
+                    unsyncronized && 'cursor-not-allowed blur-sm'
+                } ${showButton ? 'cursor-pointer' : ''} m-4`}
                 onClick={handleHistoric}
             >
                 <CardHeader
@@ -201,24 +201,28 @@ export function CardWithData({
                         className={`${titlesClass}`}
                         title={process_name}
                     >
-                        {process_name}{" "}
+                        {process_name}{' '}
                     </CardTitle>
                 </CardHeader>
                 {showButton ? (
                     <CardContent className={`p-0`}>
-                        <div className={showButton ? `p-6` : `pb-10 pr-10`}>
+                        <div
+                            className={showButton ? `p-6 pt-2` : `pb-10 pr-10`}
+                        >
                             <LastUpdate
                                 status={status}
                                 date={formateDate}
                                 className=""
                             />
-                            <Status
+                            <StatusGeral
                                 status={status}
                                 active={active}
                                 className={statusClass}
                             />
                             <IntervalorSincronizacao
                                 intervaloSincronizacao={interval_description}
+                                active={active}
+                                // intervaloSincronizacao={"teste"}
                             />
                         </div>
 
@@ -228,32 +232,34 @@ export function CardWithData({
                                     <CardDescription className="pb-0">
                                         {status === 2 &&
                                         activated_based_timer === 0
-                                            ? "Sem dados: "
-                                            : "Tempo de execução em segundos: "}
+                                            ? 'Sem dados: '
+                                            : 'Tempo de execução em segundos: '}
                                     </CardDescription>
 
                                     {
                                         <div
                                             className={
                                                 status !== 2
-                                                    ? ""
+                                                    ? ''
                                                     : `text-gray-500 cursor-not-allowed blur-sm`
                                             }
                                         >
                                             <GraphicLastDataLine
-                                                logs={lastLogs.slice(0, 10).reverse()}
+                                                logs={lastLogs
+                                                    .slice(0, 10)
+                                                    .reverse()}
                                                 success={status}
                                                 active={active}
                                             />
                                             <div className="flex justify-between">
                                                 <CardDescription className="pb-0 ">
                                                     {status == 2
-                                                        ? "Sem dados: "
+                                                        ? 'Sem dados: '
                                                         : lastData}
                                                 </CardDescription>
                                                 <CardDescription className="pb-0">
                                                     {status == 2
-                                                        ? "Sem dados: "
+                                                        ? 'Sem dados: '
                                                         : firstData}
                                                 </CardDescription>
                                             </div>
@@ -263,8 +269,8 @@ export function CardWithData({
                                 <div className="pt-0 p-4">
                                     <CardDescription>
                                         {status == 2
-                                            ? "Sem registros: "
-                                            : "Status de sincronização: "}
+                                            ? 'Sem registros: '
+                                            : 'Status de sincronização: '}
                                     </CardDescription>
                                     <GraphicLastDataSpark
                                         logs={reversedLogs}
@@ -283,14 +289,14 @@ export function CardWithData({
                             >
                                 <CardDescription className="pb-2">
                                     {status === 2
-                                        ? "Criado em: "
-                                        : "Ultima Atulização: "}
+                                        ? 'Criado em: '
+                                        : 'Ultima Atulização: '}
                                 </CardDescription>
                                 <h1 className="text-center text-balance truncate">
                                     {formateDate}
                                 </h1>
 
-                                <Status
+                                <StatusGeral
                                     status={status}
                                     active={active}
                                     className={statusClass}
@@ -300,6 +306,7 @@ export function CardWithData({
                                     intervaloSincronizacao={
                                         interval_description
                                     }
+                                    active={active}
                                     className="text-center"
                                 />
                             </div>
@@ -307,14 +314,14 @@ export function CardWithData({
                                 <div>
                                     <CardDescription className="pb-0">
                                         {status == 2
-                                            ? "Sem dados: "
-                                            : "Tempo de execução em segundos: "}
+                                            ? 'Sem dados: '
+                                            : 'Tempo de execução em segundos: '}
                                     </CardDescription>
                                     {
                                         <div
                                             className={
                                                 status !== 2
-                                                    ? ""
+                                                    ? ''
                                                     : `text-gray-500 cursor-not-allowed blur-sm`
                                             }
                                         >
@@ -334,8 +341,8 @@ export function CardWithData({
                         <div className="w-full flex-col">
                             <CardDescription className="">
                                 {status == 2
-                                    ? "Sem registros: "
-                                    : "Status de sincronização: "}
+                                    ? 'Sem registros: '
+                                    : 'Status de sincronização: '}
                             </CardDescription>
 
                             <GraphicLastDataSpark

@@ -7,6 +7,8 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { motion } from 'framer-motion';
+
 
 export default function ReturnButton() {
     const router = useRouter();
@@ -17,11 +19,13 @@ export default function ReturnButton() {
         <TooltipProvider delayDuration={100}>
             <Tooltip>
                 <TooltipTrigger asChild>
+                    
                     <Button
                         onClick={handleReturn}
                         variant="outline"
                         size="icon"
-                        className="button_menu ml-3 mt-3"
+                        
+                        className="button_menu ml-3 mt-3 hover:cursor-magnet"
                     >
                         <ChevronLeft className="h-4 w-4" />
                     </Button>

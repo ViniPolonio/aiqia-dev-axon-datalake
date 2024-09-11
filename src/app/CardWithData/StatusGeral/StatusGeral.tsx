@@ -1,23 +1,28 @@
 import { CardDescription } from "@/components/ui/card";
 import React from "react";
 
-interface StatusProps {
+interface StatusGeralProps {
     status: number;
-    
+
     active: number;
     className: string;
     showButton?: boolean;
 }
 
 
-export default function Status({showButton = true, status, active: initialActive, className}: StatusProps){
+export default function StatusGeral({
+    showButton = true,
+    status,
+    active: initialActive,
+    className,
+}: StatusGeralProps) {
     const [active, setActive] = React.useState(initialActive);
     React.useEffect(() => {
         setActive(initialActive);
     }, [initialActive]);
     return (
-        <div className={showButton ? "" : "flex flex-col items-center "}>
-            <CardDescription>Status:</CardDescription>
+        <div className={showButton ? '' : 'flex flex-col items-center '}>
+            <CardDescription>Status Geral:</CardDescription>
             <h1
                 className={`${className} font-semibold subpixel-antialiased text-lg`}
             >
@@ -25,14 +30,14 @@ export default function Status({showButton = true, status, active: initialActive
                     if (active === 1) {
                         switch (status) {
                             case 0:
-                                return "Failed";
+                                return 'Failed';
                             case 1:
-                                return "Synchronized";
+                                return 'Synchronized';
                             default:
-                                return "Unsynchronized";
+                                return 'Unsynchronized';
                         }
                     } else {
-                        return "Inactive";
+                        return 'Inactive';
                     }
                 })()}
             </h1>

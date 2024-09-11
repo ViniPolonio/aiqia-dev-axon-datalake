@@ -86,7 +86,7 @@ export function CreateTimeForm({shouldGetData}: CreateTimeFormProps) {
                 setDataType(v);
                 return v;
             }),
-        data_value: z.number().min(1).max(validateValueForType(dataType)).int(),
+        data_value: z.number().min(0).max(validateValueForType(dataType)).int(),
     });
 
     const form = useForm<z.infer<typeof formSchema>>({
