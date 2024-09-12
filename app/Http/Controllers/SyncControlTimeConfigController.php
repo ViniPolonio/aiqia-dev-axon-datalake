@@ -43,7 +43,7 @@ class SyncControlTimeConfigController extends Controller
                     'message' => 'ID is required.'
                 ], 400); 
             }
-            $return = SyncControlTimeConfig::where('sync_control_config_id', '=', $id)->get();
+            $return = SyncControlTimeConfig::where('sync_control_config_id', '=', $id)->orderBy('interval_type', 'asc')->get();
 
             if(!$return) {
                 return response()->json([

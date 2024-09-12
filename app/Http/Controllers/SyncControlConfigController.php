@@ -13,9 +13,11 @@ class SyncControlConfigController extends Controller
     public function index() 
     {
         try {
+            // Obter todas as configurações que não foram excluídas
             $configs = SyncControlConfig::whereNull('deleted_at')->get();
             $ids = $configs->pluck('id');
 
+            // Consultar tempos de configuração
             $consultTimeConfig = $this->consultTimer($ids);
 
             if (isset($consultTimeConfig['status']) && $consultTimeConfig['status'] == 0) {
@@ -33,13 +35,14 @@ class SyncControlConfigController extends Controller
                     'message' => 'No records found.'
                 ], 204);
             }
+
             $data = [];
             foreach ($configs as $config) {
                 if (is_null($config->process_name)) {
                     continue;
                 }
 
-                // Obtenha o último log concluído
+                // Obter o último log concluído
                 $lastLog = SyncControlLog::where('sync_control_config_id', $config->id)
                     ->whereNotNull('finished_at')
                     ->where('finished_at', '!=', '')
@@ -47,7 +50,7 @@ class SyncControlConfigController extends Controller
                     ->select(['sync_control_config_id', 'success', 'runtime_second', 'finished_at', 'error'])
                     ->first();
 
-                // Obtenha a lista de logs (últimos 20)
+                // Obter os últimos 20 logs
                 $logs = SyncControlLog::where('sync_control_config_id', $config->id)
                     ->whereNotNull('finished_at')
                     ->where('finished_at', '!=', '')
@@ -73,7 +76,7 @@ class SyncControlConfigController extends Controller
                 $intervalHours = $configTime['interval_hours']['value'] ?? 0;
                 $intervalMinutes = $configTime['interval_minutes']['value'] ?? 0;
 
-                // Variável que determina o status do intervalo
+                // Variáveis que determinam o status do intervalo
                 $statusDays = 'inactive'; 
                 $statusHours = 'inactive';
                 $statusMinutes = 'inactive';
@@ -84,7 +87,7 @@ class SyncControlConfigController extends Controller
                     $now = \Carbon\Carbon::now();
                     $timeDifference = $now->diffInMinutes($finishedAt);
 
-                    //Para facilitar o calculo, tudo e convertido para minutos
+                    // Para facilitar o cálculo, tudo é convertido para minutos
                     if ($intervalMinutes > 0 && $timeDifference <= $intervalMinutes) {
                         $statusMinutes = 'active'; 
                     }
@@ -103,31 +106,29 @@ class SyncControlConfigController extends Controller
                         }
                     }
                 }
-
-                $configData = [
-                    'id'            => $config->id,
-                    'process_name'  => $config->process_name,
-                    'active'        => $config->active,
-                    'created_at'    => $config->created_at,
-                    'updated_at'    => $config->updated_at,
-                    'deleted_at'    => $config->deleted_at,
-                    'interval_in_minutes' => [
-                        'value'  => $intervalMinutes,
-                        'status' => $statusMinutes,
-                    ],
-                    'interval_in_days' => [
-                        'value'  => $intervalDays,
-                        'status' => $statusDays
-                    ],
-                    'interval_in_hours' => [
-                        'value'  => $intervalHours,
-                        'status' => $statusHours
-                    ],
-                ];
-
+                //Array que é enviado.
                 $data[] = [
                     'sync_control_config_id' => $config->id,
-                    'config_data' => $configData,
+                    'config_data' => [
+                        'id' => $config->id,
+                        'process_name' => $config->process_name,
+                        'active' => $config->active,
+                        'created_at' => $config->created_at,
+                        'updated_at' => $config->updated_at,
+                        'deleted_at' => $config->deleted_at,
+                        'interval_in_minutes' => [
+                            'value' => $intervalMinutes,
+                            'status' => $statusMinutes,
+                        ],
+                        'interval_in_days' => [
+                            'value' => $intervalDays,
+                            'status' => $statusDays,
+                        ],
+                        'interval_in_hours' => [
+                            'value' => $intervalHours,
+                            'status' => $statusHours,
+                        ],
+                    ],
                     'logs' => !empty($logs) ? $logs : null,
                 ];
             }
@@ -144,6 +145,7 @@ class SyncControlConfigController extends Controller
             ], 500);
         }
     }
+
 
     public function orderIds($configs) 
     {
@@ -265,7 +267,7 @@ class SyncControlConfigController extends Controller
                     'message' => 'Record created successfully.',
                     'data' => $syncTableConfig
                 ], 200);
-            } else {
+                } else {
                 return response()->json([
                     'status' => 0,
                     'message' => 'Failed to create record.'
