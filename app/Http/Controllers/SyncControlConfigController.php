@@ -19,7 +19,7 @@ class SyncControlConfigController extends Controller
 
             // Consultar tempos de configuração
             $consultTimeConfig = $this->consultTimer($ids);
-
+            
             if (isset($consultTimeConfig['status']) && $consultTimeConfig['status'] == 0) {
                 return response()->json([
                     'status' => 0,
@@ -36,10 +36,9 @@ class SyncControlConfigController extends Controller
                 ], 204);
             }
 
-            $data = [];
-            foreach ($configs as $config) {
+            $data = $configs->map(function ($config) use ($consultTimeConfig) {
                 if (is_null($config->process_name)) {
-                    continue;
+                    return null;
                 }
 
                 // Obter o último log concluído
@@ -66,48 +65,54 @@ class SyncControlConfigController extends Controller
                             'error' => $log->error ?? null,
                         ];
                     })
-                    ->values()
                     ->toArray();
 
                 $configTime = $consultTimeConfig->where('sync_control_config_id', $config->id)->first();
 
-                // Verifica os valores de intervalo
-                $intervalDays = $configTime['interval_days']['value'] ?? 0;
-                $intervalHours = $configTime['interval_hours']['value'] ?? 0;
-                $intervalMinutes = $configTime['interval_minutes']['value'] ?? 0;
+                $intervals = [
+                    'interval_in_minutes' => [],
+                    'interval_in_hours' => [],
+                    'interval_in_days' => []
+                ];
 
-                // Variáveis que determinam o status do intervalo
-                $statusDays = 'inactive'; 
-                $statusHours = 'inactive';
-                $statusMinutes = 'inactive';
-
-                // Se houver um log concluído, calcula a diferença de tempo
-                if ($lastLog) {
-                    $finishedAt = \Carbon\Carbon::parse($lastLog->finished_at);
-                    $now = \Carbon\Carbon::now();
-                    $timeDifference = $now->diffInMinutes($finishedAt);
-
-                    // Para facilitar o cálculo, tudo é convertido para minutos
-                    if ($intervalMinutes > 0 && $timeDifference <= $intervalMinutes) {
-                        $statusMinutes = 'active'; 
+                // Popula os intervalos
+                if ($configTime) {
+                    foreach ($configTime['intervals']['interval_in_minutes']['values'] as $interval) {
+                        $intervals['interval_in_minutes'][] = $interval;
                     }
-
-                    if ($intervalHours > 0) {
-                        $intervalInMinutes = $intervalHours * 60; 
-                        if ($timeDifference <= $intervalInMinutes) {
-                            $statusHours = 'active'; 
-                        }
+                    foreach ($configTime['intervals']['interval_in_hours']['values'] as $interval) {
+                        $intervals['interval_in_hours'][] = $interval;
                     }
-
-                    if ($intervalDays > 0) {
-                        $intervalInMinutes = $intervalDays * 1440; 
-                        if ($timeDifference <= $intervalInMinutes) {
-                            $statusDays = 'active';
-                        }
+                    foreach ($configTime['intervals']['interval_in_days']['values'] as $interval) {
+                        $intervals['interval_in_days'][] = $interval;
                     }
                 }
-                //Array que é enviado.
-                $data[] = [
+
+                // Função para calcular o status do intervalo
+                $calculateStatus = function ($intervalValue, $intervalUnit, $lastLogTime) {
+                    if ($intervalValue <= 0 || !$lastLogTime) {
+                        return 'inactive';
+                    }
+                    $finishedAt = \Carbon\Carbon::parse($lastLogTime);
+                    $now = \Carbon\Carbon::now();
+                    $timeDifference = $now->diffInMinutes($finishedAt);
+                    $intervalInMinutes = match ($intervalUnit) {
+                        'days' => $intervalValue * 1440, // 1 dia = 1440 minutos
+                        'hours' => $intervalValue * 60, // 1 hora = 60 minutos
+                        'minutes' => $intervalValue,
+                        default => 0,
+                    };
+                    return $timeDifference <= $intervalInMinutes ? 'active' : 'inactive';
+                };
+
+                // Calcula status para cada intervalo e os adiciona ao array
+                foreach ($intervals as $key => &$intervalList) {
+                    foreach ($intervalList as &$interval) {
+                        $interval['status'] = $calculateStatus($interval['value'], explode('_', $key)[2], $lastLog?->finished_at);
+                    }
+                }
+
+                return [
                     'sync_control_config_id' => $config->id,
                     'config_data' => [
                         'id' => $config->id,
@@ -116,22 +121,11 @@ class SyncControlConfigController extends Controller
                         'created_at' => $config->created_at,
                         'updated_at' => $config->updated_at,
                         'deleted_at' => $config->deleted_at,
-                        'interval_in_minutes' => [
-                            'value' => $intervalMinutes,
-                            'status' => $statusMinutes,
-                        ],
-                        'interval_in_days' => [
-                            'value' => $intervalDays,
-                            'status' => $statusDays,
-                        ],
-                        'interval_in_hours' => [
-                            'value' => $intervalHours,
-                            'status' => $statusHours,
-                        ],
+                        'intervals' => $intervals,
                     ],
-                    'logs' => !empty($logs) ? $logs : null,
+                    'logs' => $logs ?: null,
                 ];
-            }
+            })->filter()->values()->toArray();
 
             return response()->json([
                 'status' => 1,
@@ -145,7 +139,6 @@ class SyncControlConfigController extends Controller
             ], 500);
         }
     }
-
 
     public function orderIds($configs) 
     {
@@ -179,7 +172,6 @@ class SyncControlConfigController extends Controller
             }
 
             $consultTimeConfig = collect($this->consultTimer([$id]));
-
             if ($consultTimeConfig->isEmpty()) {
                 return response()->json([
                     'status' => 0,
@@ -198,9 +190,22 @@ class SyncControlConfigController extends Controller
                 ], 404); 
             }
 
-            $syncControlLog = SyncControlLog::where('sync_control_time_config_id', $interval['interval_days']['id'])
-                ->orWhere('sync_control_time_config_id', $interval['interval_hours']['id'])
-                ->orWhere('sync_control_time_config_id', $interval['interval_minutes']['id'])
+            $intervalMinutesId = $interval['intervals']['interval_in_minutes']['values'][0]['id'] ?? null;
+            $intervalHoursId = $interval['intervals']['interval_in_hours']['values'][0]['id'] ?? null;
+            
+            $intervalDaysValues = $interval['intervals']['interval_in_days']['values'] ?? [];
+
+            $intervalInDays = [];
+            foreach ($intervalDaysValues as $dayInterval) {
+                $intervalInDays[] = [
+                    'id'    => $dayInterval['id'],
+                    'value' => $dayInterval['value'],
+                ];
+            }
+
+            $syncControlLog = SyncControlLog::where('sync_control_time_config_id', $intervalDaysValues[0]['id'] ?? null)  // Pega o primeiro intervalo de dias para log
+                ->orWhere('sync_control_time_config_id', $intervalHoursId)
+                ->orWhere('sync_control_time_config_id', $intervalMinutesId)
                 ->where('sync_control_config_id', $id)
                 ->first();
 
@@ -208,27 +213,34 @@ class SyncControlConfigController extends Controller
 
             $now = now();
             $timeDifference = $now->diffInMinutes($finishedAt);
-            //É feito uma conversão de o valor vezes minutos para facilitar a comparação de activo inactivo
-            $intervalInMinutes = $interval['interval_minutes']['value'] ?? 0;
-            $intervalInHours = ($interval['interval_hours']['value'] ?? 0) * 60; 
-            $intervalInDays = ($interval['interval_days']['value'] ?? 0) * 1440; 
 
+            $intervalInMinutes = $interval['intervals']['interval_in_minutes']['values'][0]['value'] ?? 0;
+            $intervalInHours = ($interval['intervals']['interval_in_hours']['values'][0]['value'] ?? 0) * 60;
+
+            $daysStatus = [];
+            foreach ($intervalInDays as $dayInterval) {
+                $intervalDaysValueInMinutes = $dayInterval['value'] * 1440; // 1 dia = 1440 minutos
+                $status = ($timeDifference < $intervalDaysValueInMinutes) ? 'active' : 'inactive';
+                $daysStatus[] = [
+                    'id' => $dayInterval['id'],
+                    'value' => $dayInterval['value'],
+                    'status' => $status
+                ];
+            }
+
+            // Cálculo do status de minutos e horas
             $minutesStatus = ($timeDifference < $intervalInMinutes) ? 'active' : 'inactive';
             $hoursStatus = ($timeDifference < $intervalInHours) ? 'active' : 'inactive';
-            $daysStatus = ($timeDifference < $intervalInDays) ? 'active' : 'inactive';
 
             $return->interval_in_minutes = [
-                'value'  => $interval['interval_minutes']['value'],
+                'value'  => $interval['intervals']['interval_in_minutes']['values'][0]['value'],
                 'status' => $minutesStatus,
             ];
-            $return->interval_in_days = [
-                'value'  => $interval['interval_days']['value'],
-                'status' => $daysStatus
-            ];
             $return->interval_in_hours = [
-                'value'  => $interval['interval_hours']['value'],
+                'value'  => $interval['intervals']['interval_in_hours']['values'][0]['value'],
                 'status' => $hoursStatus
             ];
+            $return->interval_in_days = $daysStatus; 
 
             return response()->json([
                 'status' => 1,
@@ -240,8 +252,8 @@ class SyncControlConfigController extends Controller
                     'updated_at' => $return->updated_at,
                     'deleted_at' => $return->deleted_at,
                     'interval_in_minutes' => $return->interval_in_minutes,
-                    'interval_in_days' => $return->interval_in_days,
-                    'interval_in_hours' => $return->interval_in_hours
+                    'interval_in_hours' => $return->interval_in_hours,
+                    'interval_in_days' => $return->interval_in_days, 
                 ],
             ], 200);
         } 
@@ -253,6 +265,8 @@ class SyncControlConfigController extends Controller
             ], 500);
         }
     }
+
+
 
     public function store(SyncControlConfigCreateRequest $request) 
     {
@@ -391,7 +405,7 @@ class SyncControlConfigController extends Controller
         }
     }
 
-    public function consultTimer($ids) 
+    public function consultTimerShow($ids) 
     {
         $consultTimeConfig = SyncControlTimeConfig::whereIn('sync_control_config_id', $ids)
             ->where('active', 1)
@@ -437,4 +451,97 @@ class SyncControlConfigController extends Controller
 
         return $arrayGrouped->toArray(); 
     }
+
+    public function consultTimer($ids) 
+{
+    $consultTimeConfig = SyncControlTimeConfig::whereIn('sync_control_config_id', $ids)
+        ->where('active', 1)
+        ->get();
+
+    // Agrupa por sync_control_config_id
+    $arrayGrouped = $consultTimeConfig->groupBy('sync_control_config_id')->map(function ($group) {
+        $intervals = [
+            'interval_in_minutes' => [],
+            'interval_in_hours' => [],
+            'interval_in_days' => []
+        ];
+
+        foreach ($group as $item) {
+            $intervalType = $item->interval_type;
+            $intervalValue = $item->interval_value;
+            $intervalId = $item->id;
+
+            if ($intervalType == 1) { // Minutos
+                $intervals['interval_in_minutes'][] = [
+                    'id' => $intervalId,
+                    'value' => $intervalValue
+                ];
+            } elseif ($intervalType == 2) { // Horas
+                $intervals['interval_in_hours'][] = [
+                    'id' => $intervalId,
+                    'value' => $intervalValue
+                ];
+            } elseif ($intervalType == 3) { // Dias
+                $intervals['interval_in_days'][] = [
+                    'id' => $intervalId,
+                    'value' => $intervalValue
+                ];
+            }
+        }
+
+        // Obter o último tempo de log, se existir
+        $lastLogTime = SyncControlLog::where('sync_control_config_id', $group->first()->sync_control_config_id)
+            ->orderBy('finished_at', 'desc')
+            ->value('finished_at');
+
+        // Calcula o status dos intervalos
+        $status = function ($intervals, $intervalUnit, $lastLogTime) {
+            if (!$lastLogTime) {
+                return 'inactive';
+            }
+
+            $finishedAt = \Carbon\Carbon::parse($lastLogTime);
+            $now = \Carbon\Carbon::now();
+            $timeDifference = $now->diffInMinutes($finishedAt);
+
+            foreach ($intervals as $interval) {
+                $intervalValue = $interval['value'];
+                $intervalInMinutes = match ($intervalUnit) {
+                    'days' => $intervalValue * 1440, // 1 dia = 1440 minutos
+                    'hours' => $intervalValue * 60, // 1 hora = 60 minutos
+                    'minutes' => $intervalValue,
+                    default => 0,
+                };
+
+                if ($timeDifference <= $intervalInMinutes) {
+                    return 'active';
+                }
+            }
+            return 'inactive';
+        };
+
+        return [
+            'sync_control_config_id' => $group->first()->sync_control_config_id,
+            'intervals' => [
+                'interval_in_minutes' => [
+                    'values' => $intervals['interval_in_minutes'],
+                    'status' => $status($intervals['interval_in_minutes'], 'minutes', $lastLogTime),
+                ],
+                'interval_in_hours' => [
+                    'values' => $intervals['interval_in_hours'],
+                    'status' => $status($intervals['interval_in_hours'], 'hours', $lastLogTime),
+                ],
+                'interval_in_days' => [
+                    'values' => $intervals['interval_in_days'],
+                    'status' => $status($intervals['interval_in_days'], 'days', $lastLogTime),
+                ],
+            ],
+            'active' => $group->first()->active,
+        ];
+    });
+
+    return $arrayGrouped->toArray(); 
+}
+
+
 }
