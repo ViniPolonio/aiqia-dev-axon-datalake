@@ -1,6 +1,6 @@
-import * as React from "react";
-import { Tracker } from "@tremor/react";
-import { Button } from "@/components/ui/button";
+import * as React from 'react';
+import { Tracker } from '@tremor/react';
+import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
@@ -8,17 +8,18 @@ import {
     CardFooter,
     CardHeader,
     CardTitle,
-} from "@/components/ui/card";
-import { format } from "date-fns";
-import { useRouter } from "next/navigation";
-import { EditButton } from "@/components/botoes/EditButton/EditButton";
-import { PowerButton } from "@/components/botoes/PowerButton/PowerButton";
-import { GraphicLastDataSpark } from "./GraphicLastDataSpark/GraphicLastDataSpark";
-import { GraphicLastDataLine } from "./GraphicLastDataLine/GraphicLastDataLine";
+} from '@/components/ui/card';
+import { format } from 'date-fns';
+import { useRouter } from 'next/navigation';
+import { EditButton } from '@/components/botoes/EditButton/EditButton';
+import { PowerButton } from '@/components/botoes/PowerButton/PowerButton';
+import { GraphicLastDataSpark } from './GraphicLastDataSpark/GraphicLastDataSpark';
+import { GraphicLastDataLine } from './GraphicLastDataLine/GraphicLastDataLine';
 import StatusGeral from './StatusGeral/StatusGeral';
-import LastUpdate from "./LastUpdate/LastUpdate";
-import IntervalorSincronizacao from "./IntervalorSincronizacao/IntervalorSincronizacao";
-import ReturnUnsynchronized from "@/components/botoes/ReturnUnsynchronized/ReturnUnsynchronized";
+import LastUpdate from './LastUpdate/LastUpdate';
+import IntervalorSincronizacao from './IntervaloSincronizacao/IntervaloSincronizacao';
+import ReturnUnsynchronized from '@/components/botoes/ReturnUnsynchronized/ReturnUnsynchronized';
+import DialogEmptyLogs from './DialogEmptyLogs/DialogEmptyLogs';
 
 interface CardWithDataProps {
     id: number;
@@ -43,12 +44,13 @@ export function CardWithData({
     showButton = true,
     loading = false,
     lastLogs = [],
-    interval_description = ["Sem dados","teste","teste"],
+    interval_description = ['Sem dados', 'teste', 'teste'],
     // interval_description = "Sem dados",
     activated_based_timer,
     unsyncronized = false,
 }: CardWithDataProps) {
     const [active, setActive] = React.useState(initialActive);
+    const [errorEmptyLogs, setErrorEmptyLogs] = React.useState(false);
 
     React.useEffect(() => {
         setActive(initialActive); // Garantir que o estado inicial esteja correto
@@ -56,27 +58,28 @@ export function CardWithData({
 
     const router = useRouter();
     // console.log(date)
-    const formateDate = format(date, "dd/MM/yyyy HH:mm:ss");
+    const formateDate = format(date, 'dd/MM/yyyy HH:mm:ss');
     const firstData = lastLogs[0]?.finished_at
-        ? format(new Date(lastLogs[0].finished_at), "dd/MM/yyyy")
-        : "Data não disponível";
+        ? format(new Date(lastLogs[0].finished_at), 'dd/MM/yyyy')
+        : 'Data não disponível';
     const reversedLogs = lastLogs.slice().reverse();
 
     const lastData =
         lastLogs.length > 10
             ? lastLogs[9]?.finished_at
-                ? format(new Date(lastLogs[9].finished_at), "dd/MM/yyyy")
-                : "Data não disponível"
+                ? format(new Date(lastLogs[9].finished_at), 'dd/MM/yyyy')
+                : 'Data não disponível'
             : lastLogs[lastLogs.length - 1]?.finished_at
             ? format(
                   new Date(lastLogs[lastLogs.length - 1].finished_at),
-                  "dd/MM/yyyy"
+                  'dd/MM/yyyy'
               )
-            : "Data não disponível";
+            : 'Data não disponível';
     const cardSkeletonClass = showButton
-        ? "w-full h-full"
-        : "w-[600px] h-[350px]";
+        ? 'w-full h-full'
+        : 'w-[60vw] h-[40vh]';
 
+    console.log(unsyncronized, 'unsyncronized');
     if (loading) {
         return (
             <Card
@@ -93,7 +96,11 @@ export function CardWithData({
                             <div className="mb-2 h-4 pb-2  bg-gray-300 dark:bg-gray-600 rounded-md"></div>
                             <div className="mb-2 h-6 bg-gray-300 dark:bg-gray-600 rounded-md"></div>
                             <div className="mb-2 h-4 pb-2 bg-gray-300 dark:bg-gray-600 rounded-md"></div>
-                            <div className="mb-2 h-6 bg-gray-300 dark:bg-gray-600 rounded-md"></div>
+                            <div className="flex flex-row ">
+                                <div className="mb-2 w-1/3  h-14 bg-gray-300 dark:bg-gray-600 rounded-md"></div>
+                                <div className="mb-2 w-1/3 mx-3 h-14 bg-gray-300 dark:bg-gray-600 rounded-md"></div>
+                                <div className="mb-2 w-1/3 h-14 bg-gray-300 dark:bg-gray-600 rounded-md"></div>
+                            </div>
                         </div>
                         <div className="p-1">
                             <div className="mb-2 h-64 p-2 bg-gray-300 dark:bg-gray-600 rounded-md"></div>
@@ -106,22 +113,27 @@ export function CardWithData({
                 ) : (
                     <CardContent>
                         <div className="flex flex-row">
-                            <div className="flex flex-col items-center justify-center w-1/3 pr-10 pb-5">
-                                <div className="mb-2 h-6 w-24 bg-gray-300 dark:bg-gray-600 rounded-md"></div>{" "}
-                                <div className="mb-2 h-8 w-32 bg-gray-300 dark:bg-gray-600 rounded-md"></div>{" "}
+                            <div className="flex flex-col items-center justify-center w-1/2 pr-10 pb-5">
+                                <div className="mb-2 h-6 w-24 bg-gray-300 dark:bg-gray-600 rounded-md"></div>{' '}
+                                <div className="mb-2 h-8 w-32 bg-gray-300 dark:bg-gray-600 rounded-md"></div>{' '}
                                 <div className="mb-2 h-6 w-20 bg-gray-300 dark:bg-gray-600 rounded-md"></div>
-                                <div className="h-8 w-32 bg-gray-300 dark:bg-gray-600 rounded-md"></div>{" "}
+                                <div className="h-8 w-32 bg-gray-300 dark:bg-gray-600 rounded-md"></div>{' '}
+                                <div className="flex flex-row w-full mt-3">
+                                    <div className="mb-2 w-1/3  h-20 bg-gray-300 dark:bg-gray-600 rounded-md"></div>
+                                    <div className="mb-2 w-1/3 mx-3 h-20 bg-gray-300 dark:bg-gray-600 rounded-md"></div>
+                                    <div className="mb-2 w-1/3 h-20 bg-gray-300 dark:bg-gray-600 rounded-md"></div>
+                                </div>
                             </div>
 
                             {/* Esqueleto para a segunda coluna (GraphicLastDataLine) */}
-                            <div className="w-2/3 flex flex-col items-stretch">
-                                <div className="h-40 bg-gray-300 dark:bg-gray-600 rounded-md"></div>{" "}
+                            <div className="w-1/2 flex flex-col items-stretch">
+                                <div className="h-48 bg-gray-300 dark:bg-gray-600 rounded-md"></div>{' '}
                                 {/* Esqueleto para GraphicLastDataLine */}
                             </div>
                         </div>
 
                         {/* Esqueleto para GraphicLastDataSpark */}
-                        <div className="mt-12 w-full h-10 bg-gray-300 dark:bg-gray-600 rounded-md"></div>
+                        <div className=" w-full h-10 bg-gray-300 dark:bg-gray-600 rounded-md"></div>
                     </CardContent>
                 )}
                 {showButton && (
@@ -137,60 +149,67 @@ export function CardWithData({
     const cardClass =
         active === 0
             ? showButton
-                ? "w-full h-h-full  animation_default"
-                : "w-[600px] h-[350px] animation_default"
+                ? 'w-full h-h-full  animation_default'
+                : 'w-[60vw] h-[40vh] animation_default'
             : showButton
             ? status === 0
-                ? "w-full h-full  animation_failed"
+                ? 'w-full h-full  animation_failed'
                 : status === 1
-                ? "w-full h-full animation_success"
-                : "w-full h-full animation_unsyncronized"
+                ? 'w-full h-full animation_success'
+                : 'w-full h-full animation_unsyncronized'
             : status === 0
-            ? " w-[600px] h-[350px] animation_failed"
+            ? ' w-[60vw] h-[40vh] animation_failed'
             : status === 1
-            ? "w-[600px] h-[350px] animation_success"
-            : "w-[600px] h-[350px] animation_unsyncronized";
+            ? 'w-[60vw] h-[40vh] animation_success'
+            : unsyncronized
+            ? ''
+            : 'w-[60vw] h-[40vh] animation_unsyncronized';
     const titlesClass =
         active === 0
-            ? "dark:text-gray-600 text-gray-600 truncate"
+            ? 'dark:text-gray-600 text-gray-600 truncate'
             : status === 0
-            ? "dark:text-red-400 text-red-600 truncate " //600
+            ? 'dark:text-red-400 text-red-600 truncate ' //600
             : status === 1
-            ? "dark:text-green-300 text-green-600 truncate" //600
-            : "dark:text-yellow-300 text-yellow-600 truncate"; //600
+            ? 'dark:text-green-300 text-green-600 truncate' //600
+            : 'dark:text-yellow-300 text-yellow-600 truncate'; //600
     const border =
         active === 0
-            ? ""
+            ? ''
             : status === 0
-            ? "border dark:border-slate-900 rounded shadow-lg delay-200 hover:shadow-2xl transition transform duration-500 ease-in-out dark:border-2 dark:hover:border-red-500 dark:hover:shadow-red-500/50 p-2"
+            ? 'border dark:border-slate-900 rounded shadow-lg delay-200 hover:shadow-2xl transition transform duration-500 ease-in-out dark:border-2 dark:hover:border-red-500 dark:hover:shadow-red-500/50 p-2'
             : status === 1
-            ? "border dark:border-slate-900 rounded shadow-lg delay-200 hover:shadow-2xl transition transform duration-500 ease-in-out dark:border-2 dark:hover:border-green-500 dark:hover:shadow-green-500/50 p-2"
-            : "border dark:border-slate-900 rounded shadow-lg delay-200 hover:shadow-2xl transition transform duration-500 ease-in-out dark:border-2 dark:hover:border-yellow-500 dark:hover:shadow-yellow-500/50 p-2";
+            ? 'border dark:border-slate-900 rounded shadow-lg delay-200 hover:shadow-2xl transition transform duration-500 ease-in-out dark:border-2 dark:hover:border-green-500 dark:hover:shadow-green-500/50 p-2'
+            : 'border dark:border-slate-900 rounded shadow-lg delay-200 hover:shadow-2xl transition transform duration-500 ease-in-out dark:border-2 dark:hover:border-yellow-500 dark:hover:shadow-yellow-500/50 p-2';
     const statusClass =
         active === 0
-            ? "text-center text-balance text-gray-600"
+            ? 'text-center text-balance text-gray-600'
             : status === 0
-            ? "text-center text-balance text-red-600 dark:text-red-400" //600
+            ? 'text-center text-balance text-red-600 dark:text-red-400' //600
             : status === 1
-            ? "text-center text-balance text-green-600 dark:text-green-300" //600
-            : "text-center text-balance text-yellow-600 dark:text-yellow-300"; //600
+            ? 'text-center text-balance text-green-600 dark:text-green-300' //600
+            : 'text-center text-balance text-yellow-600 dark:text-yellow-300'; //600
 
     const buttonClass =
         active === 0
-            ? "bg-gray-600 transition-colors duration-700 hover:bg-gray-500"
+            ? 'bg-gray-600 transition-colors duration-700 hover:bg-gray-500'
             : status === 0
-            ? " transition-colors duration-700 hover:bg-red-500  "
+            ? ' transition-colors duration-700 hover:bg-red-500  '
             : status === 1
-            ? "transition-colors duration-700 hover:bg-green-500"
-            : "transition-colors duration-700 hover:bg-yellow-500";
+            ? 'transition-colors duration-700 hover:bg-green-500'
+            : 'transition-colors duration-700 hover:bg-yellow-500';
     const handleHistoric = () => {
-        showButton ? router.push(`/historic/${id}`) : "";
+        showButton
+            ? lastLogs.length > 0
+                ? router.push(`/historic/${id}`)
+                : setErrorEmptyLogs(true)
+            : '';
     };
     return (
         <div className="relative">
             <Card
                 className={`${cardClass} ${
-                    unsyncronized && 'cursor-not-allowed blur-sm'
+                    unsyncronized &&
+                    'w-[60vw] h-[40vh] cursor-not-allowed blur-sm'
                 } ${showButton ? 'cursor-pointer' : ''} m-4`}
                 onClick={handleHistoric}
             >
@@ -282,10 +301,10 @@ export function CardWithData({
                         </div>
                     </CardContent>
                 ) : (
-                    <CardContent className={`flex items-center flex-col`}>
-                        <div className="flex flex-row">
+                    <CardContent className={`flex items-center  flex-col`}>
+                        <div className="flex flex-row w-full justify-around">
                             <div
-                                className={`p-0 flex items-center justify-center flex-col pr-10 pb-5`}
+                                className={`p-0 flex items-center justify-center flex-col pb-5`}
                             >
                                 <CardDescription className="pb-2">
                                     {status === 2
@@ -308,9 +327,10 @@ export function CardWithData({
                                     }
                                     active={active}
                                     className="text-center"
+                                    showButton={showButton}
                                 />
                             </div>
-                            <div className={`w-2/3 items-stretch`}>
+                            <div className={`w-[20vw] items-stretch`}>
                                 <div>
                                     <CardDescription className="pb-0">
                                         {status == 2
@@ -327,8 +347,7 @@ export function CardWithData({
                                         >
                                             <GraphicLastDataLine
                                                 logs={lastLogs
-                                                    .slice(10, 20)
-                                                    .reverse()}
+                                                    .slice(10, 20)}
                                                 success={status}
                                                 active={active}
                                             />

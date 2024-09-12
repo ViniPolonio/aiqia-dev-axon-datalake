@@ -53,13 +53,12 @@ export default function Home() {
             if (request.status === 200) {
                 const response = request.data;
                 const data = response.data;
-                console.log(data[5].config_data.interval_status);
 
                 const configTables = data.map((item: any) => {
                    const timeConfigs = [
-                       item.config_data.interval_in_minutes,
-                       item.config_data.interval_in_hours,
-                       item.config_data.interval_in_days,
+                       item.config_data.intervals.interval_in_minutes,
+                       item.config_data.intervals.interval_in_hours,
+                       item.config_data.intervals.interval_in_days,
                    ];
                     return {
                         id: item.config_data.id,
@@ -95,7 +94,6 @@ export default function Home() {
                     };
                    
                 });
-                console.log(configTables)
                 
                 
                 setData((prevData) => {
@@ -112,9 +110,7 @@ export default function Home() {
 
                     return combinedData;
                 });
-                // console.log(configTables);
-
-                // setData((prevData) => [...prevData, ...configTables]);
+                
             }
         } catch (error) {
             console.error(error);
@@ -133,7 +129,6 @@ export default function Home() {
     const toggleAutoplay = useCallback(() => {
         const autoplay = plugin.current;
         if (!autoplay) return;
-        console.log("autoplçy " + plugin.current.isPlaying() + " " + isPlaying);
 
         if (autoplay.isPlaying()) {
             autoplay.stop();
@@ -141,12 +136,7 @@ export default function Home() {
         } else {
             autoplay.play();
             setIsPlaying(true);
-            console.log(
-                "autoplçy deposiiiiiii " +
-                    plugin.current.isPlaying() +
-                    " " +
-                    isPlaying
-            );
+            
         }
     }, []);
 
@@ -154,13 +144,11 @@ export default function Home() {
         const autoplay = plugin.current;
         if (!autoplay) return;
 
-        console.log("autoplçy " + autoplay.isPlaying() + " " + isPlaying);
 
         if (autoplay.isPlaying()) {
             setIsPlaying(false);
             autoplay.stop();
         }
-        console.log("autoplçy " + autoplay.isPlaying() + " " + isPlaying);
     };
 
     return (

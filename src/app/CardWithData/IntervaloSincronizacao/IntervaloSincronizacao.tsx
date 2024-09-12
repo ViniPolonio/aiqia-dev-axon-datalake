@@ -1,24 +1,26 @@
-import { Card, CardDescription, CardTitle } from "@/components/ui/card";
-import { EllipsisIcon } from "lucide-react";
-import React from "react";
+import { Card, CardDescription, CardTitle } from '@/components/ui/card';
+import { EllipsisIcon } from 'lucide-react';
+import React from 'react';
 import {
     Tooltip,
     TooltipContent,
     TooltipProvider,
     TooltipTrigger,
-} from "@/components/ui/tooltip";
-interface IntervalorSincronizacaoProps {
+} from '@/components/ui/tooltip';
+interface IntervaloSincronizacaoProps {
     intervaloSincronizacao: Array<any>;
     // intervaloSincronizacao: string;
+    showButton?: boolean;
     className?: string;
     active: number;
 }
 
-export default function IntervalorSincronizacao({
+export default function IntervaloSincronizacao({
     intervaloSincronizacao,
     className,
     active: initialActive,
-}: IntervalorSincronizacaoProps) {
+    showButton = true,
+}: IntervaloSincronizacaoProps) {
     const [active, setActive] = React.useState(initialActive);
     React.useEffect(() => {
         setActive(initialActive);
@@ -34,14 +36,12 @@ export default function IntervalorSincronizacao({
             default:
                 return '--';
         }
-    }
+    };
 
     const formatStatus = (status: string) => {
         return status === 'active' ? 'Success' : 'Unsynchronized';
-    }
+    };
     const textClassName = (status: string) => {
-        console.log(status)
-        console.log(status === 'active');
 
         return active === 0
             ? 'text-center text-balance text-gray-600'
@@ -56,7 +56,7 @@ export default function IntervalorSincronizacao({
             : status === 'active'
             ? 'border-green-500'
             : 'border-yellow-500';
-    }
+    };
     return (
         <div>
             <CardDescription className={`${className} pb-2`}>
@@ -103,22 +103,45 @@ export default function IntervalorSincronizacao({
                                   key={index}
                                   className={`${className} text-center text-balance truncate`}
                               >
-                                  <Card
-                                      className={`p-1 border-2 w-[7vw] ${borderClassName(
-                                          item.status
-                                      )}`}
-                                  >
-                                      <CardTitle
-                                          className={`text-[1.3rem] ${textClassName(
+                                  {showButton ? (
+                                      <Card
+                                          className={`p-1 border-2 w-[7vw] ${borderClassName(
                                               item.status
                                           )}`}
                                       >
-                                          {item.value + ' ' + formatType(index)}
-                                      </CardTitle>
-                                      <CardDescription>
-                                          {formatStatus(item.status)}
-                                      </CardDescription>
-                                  </Card>
+                                          <CardTitle
+                                              className={`text-[1.3rem] ${textClassName(
+                                                  item.status
+                                              )}`}
+                                          >
+                                              {item.value +
+                                                  ' ' +
+                                                  formatType(index)}
+                                          </CardTitle>
+                                          <CardDescription>
+                                              {formatStatus(item.status)}
+                                          </CardDescription>
+                                      </Card>
+                                  ) : (
+                                      <Card
+                                          className={`px-4 border-2 w-[7vw] mx-3 flex flex-col justify-center align-center ${borderClassName(
+                                              item.status
+                                          )}`}
+                                      >
+                                          <CardTitle
+                                              className={`text-[1.3rem] ${textClassName(
+                                                  item.status
+                                              )}`}
+                                          >
+                                              {item.value +
+                                                  ' ' +
+                                                  formatType(index)}
+                                          </CardTitle>
+                                          <CardDescription>
+                                              {formatStatus(item.status)}
+                                          </CardDescription>
+                                      </Card>
+                                  )}
                               </h1>
                           ) : (
                               <h1

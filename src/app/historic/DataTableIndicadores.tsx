@@ -54,6 +54,11 @@ import { se } from "date-fns/locale";
 import { setEngine } from "crypto";
 import TableSkeleton from "./TableSkeleton/TableSkeleton";
 
+interface TimeConfigs {
+    value: number;
+    status: string;
+}
+
 export type Data = {
     id: number;
     process_name: string;
@@ -62,14 +67,15 @@ export type Data = {
     status: number;
     created_at: Date;
     finished_at: Date;
-    interval_description: string;
+    interval_description?: Array<string>;
+    usyncronized?: boolean;
 };
 
 export const defaultData: Data = {
     id: 0,
-    process_name: "",
+    process_name: '',
     activated_based_timer: 0,
-    interval_description: "",
+    interval_description: ['Sem dados', 'teste', 'teste'],
     active: 0,
     status: 2,
     created_at: new Date(),
@@ -336,7 +342,7 @@ export default function DataTable() {
     const [dataTable, setDataTable] = useState<Data | undefined>();
     const [logs, setLogs] = useState<Indicadores[]>([]);
     const [sorting, setSorting] = React.useState<SortingState>([
-        { id: "finished_at", desc: true },
+        { id: 'finished_at', desc: true },
     ]);
     const [columnFilters, setColumnFilters] =
         React.useState<ColumnFiltersState>([]);
@@ -350,7 +356,7 @@ export default function DataTable() {
         pageIndex: 0,
         pageSize: 20,
     });
-    const [linkNextPage, setLinkNextPage] = useState("");
+    const [linkNextPage, setLinkNextPage] = useState('');
     const [hasMore, setHasMore] = useState(false);
     const observer = React.useRef<IntersectionObserver | null>(null);
 
@@ -390,25 +396,141 @@ export default function DataTable() {
                     id: log.id,
                     sync_control_time_config_id:
                         log.sync_control_time_config_id,
-                    status: log.success === 1 ? "success" : "failed",
+                    status: log.success === 1 ? 'success' : 'failed',
                     started_at: new Date(log.started_at),
                     finished_at: new Date(log.finished_at),
                     created_at: new Date(log.created_at),
                     runtime_second: log.runtime_second,
                     error:
-                        log.success === 0 && log.error === ""
-                            ? "Erro desconhecido"
+                        log.success === 0 && log.error === ''
+                            ? 'Erro desconhecido'
                             : log.error,
                     process_type: log.process_type,
                 }));
                 setLogs((prevLogs) => [...prevLogs, ...indicadoresData]);
             }
         } catch (error) {
-            console.error("Erro ao buscar mais logs:", error);
+            console.error('Erro ao buscar mais logs:', error);
         } finally {
             setIsGettingMoreData(false);
         }
     };
+    // Função para buscar e configurar os dados do Card
+    const fetchCardData = async (id: string) => {
+        let timeConfigs: any[] = [];
+        let configTables: Data;
+
+        try {
+            const ResultProcess = await getControllById(id);
+            const data = ResultProcess.data;
+            console.log(data);
+
+            timeConfigs = [
+                data.interval_in_minutes,
+                data.interval_in_hours,
+                data.interval_in_days,
+            ];
+
+            configTables = {
+                id: data.id,
+                usyncronized: true,
+                process_name: data.process_name,
+                active: data.active,
+                status: 2,
+                created_at: new Date(data.created_at),
+                activated_based_timer: data.interval_status,
+                finished_at: new Date(0),
+                interval_description: data.interval_description,
+            };
+
+            console.log(configTables);
+            return { configTables, timeConfigs };
+        } catch (error) {
+            console.error('Erro ao buscar controle:', error);
+            throw error; // Propaga o erro para que o chamador saiba lidar
+        }
+    };
+
+    // Função para buscar e configurar os Logs
+    const fetchLogsData = async (
+        id: string,
+        configTables: Data,
+        timeConfigs: any[]
+    ) => {
+        let indicadoresData: Indicadores[] = [];
+
+        try {
+            const Result = await getLogsById(id);
+            console.log(Result);
+
+            const { logs, has_more } = Result.data;
+
+            setLinkNextPage(logs.next_page_url);
+            setHasMore(has_more);
+
+            if (Result.status === 1) {
+                configTables = {
+                    ...configTables,
+                    usyncronized: false,
+                    finished_at:
+                        logs.data.length === 0
+                            ? new Date(0)
+                            : new Date(logs.data[0].finished_at),
+                    status:
+                        logs.data.length === 0
+                            ? 2
+                            : timeConfigs.some((timeConfig: TimeConfigs) => {
+                                  return (
+                                      timeConfig.status === 'inactive' &&
+                                      timeConfig.value !== 0
+                                  );
+                              }) ||
+                              timeConfigs.reduce(
+                                  (acc, timeConfig) => acc + timeConfig.value,
+                                  0
+                              ) === 0
+                            ? 3
+                            : logs.data[0].success,
+                };
+
+                indicadoresData = logs.data.map((log: any) => ({
+                    id: log.id,
+                    sync_control_time_config_id:
+                        log.sync_control_time_config_id,
+                    status: log.success === 1 ? 'success' : 'failed',
+                    started_at: new Date(log.started_at),
+                    finished_at: new Date(log.finished_at),
+                    created_at: new Date(log.created_at),
+                    runtime_second: log.runtime_second,
+                    error:
+                        log.success === 0 && log.error === ''
+                            ? 'Erro não informado'
+                            : log.error,
+                    process_type: log.process_type,
+                }));
+
+                const updatedLastElements = indicadoresData.map((element) => {
+                    return {
+                        ...element,
+                        status: element.status === 'success' ? 1 : 0,
+                    };
+                });
+
+                console.log(updatedLastElements);
+                setDataTable(configTables);
+                console.log(configTables);
+                setLastLogs(updatedLastElements);
+                if (indicadoresData.length > 0) {
+                    setLogs(indicadoresData);
+                }
+            }
+        } catch (error) {
+            console.error('Erro ao buscar logs:', error);
+            throw error;
+        }
+    };
+
+    // Função principal orquestradora
     const getData = async () => {
         setIsLoadingCard(true);
         setIsLoadingData(true);
@@ -420,77 +542,14 @@ export default function DataTable() {
         }
 
         try {
-            let status = 2;
-            let indicadoresData: Indicadores[] = [];
+            // Busca os dados do card
+            const { configTables, timeConfigs } = await fetchCardData(id);
+            setDataTable(configTables);
 
-            try {
-                const Result = await getLogsById(id);
-                const data = Result.data;
-                const { config, logs, has_more } = data;
-                console.log(Result);
-                console.log(logs.data.length === 0);
-
-                setLinkNextPage(logs.next_page_url);
-                setHasMore(has_more);
-                
-                const configTables: Data = {
-                    id: config.id,
-                    process_name: config.process_name,
-                    active: config.active,
-                    status:
-                        logs.data.length === 0
-                            ? 2
-                            : config.interval_status === 2
-                            ? 3
-                            : logs.data[0].success,
-                    created_at: new Date(config.created_at),
-                    activated_based_timer: config.interval_status,
-                    finished_at:
-                        logs.data.length === 0
-                            ? new Date(0)
-                            : new Date(logs.data[0].finished_at),
-                    interval_description: config.interval_description,
-                };
-                console.log(configTables);
-                setDataTable(configTables);
-                if (Result.status === 1) {
-                    indicadoresData = logs.data.map((log: any) => ({
-                        id: log.id,
-                        sync_control_time_config_id:
-                            log.sync_control_time_config_id,
-                        status: log.success === 1 ? "success" : "failed",
-                        started_at: new Date(log.started_at),
-                        finished_at: new Date(log.finished_at),
-                        created_at: new Date(log.created_at),
-                        runtime_second: log.runtime_second,
-                        error:
-                            log.success === 0 && log.error === ""
-                                ? "Erro não informado"
-                                : log.error,
-                        process_type: log.process_type,
-                    }));
-                    // const lastElements =
-                    //     indicadoresData.slice(-20) || indicadoresData;
-
-                    const updatedLastElements = indicadoresData.map(
-                        (element) => {
-                            return {
-                                ...element,
-                                status: element.status === "success" ? 1 : 0,
-                            };
-                        }
-                    );
-                    console.log(updatedLastElements);
-                    setLastLogs(updatedLastElements);
-                    if (indicadoresData.length > 0) {
-                        setLogs(indicadoresData);
-                    }
-                }
-            } catch (error) {
-                console.error("Erro ao buscar logs:", error);
-            }
+            // Busca os logs e atualiza os dados do card e logs
+            await fetchLogsData(id, configTables, timeConfigs);
         } catch (error) {
-            console.error("Erro ao buscar dados:", error);
+            console.error('Erro durante a obtenção dos dados:', error);
         } finally {
             setIsLoadingCard(false);
             setIsLoadingData(false);
@@ -500,15 +559,15 @@ export default function DataTable() {
     const setHigh = (length: number) => {
         switch (length) {
             case 1:
-                return "h-[8vh]";
+                return 'h-[8vh]';
             case 2:
-                return "h-[16vh]";
+                return 'h-[16vh]';
             case 3:
-                return "h-[24vh]";
+                return 'h-[24vh]';
             case 4:
-                return "h-[32vh]";
+                return 'h-[32vh]';
         }
-    }
+    };
 
     const lastPostElementRef = React.useCallback(
         (node: any) => {
@@ -536,12 +595,12 @@ export default function DataTable() {
 
     React.useEffect(() => {
         const path = window.location.pathname;
-        const extractedId = path.split("/").pop();
+        const extractedId = path.split('/').pop();
 
         if (extractedId) {
             setId(extractedId);
         } else {
-            console.error("ID não encontrado na URL");
+            console.error('ID não encontrado na URL');
             return;
         }
 
@@ -577,18 +636,20 @@ export default function DataTable() {
     {
         console.log(logs);
     }
+    console.log(dataTable?.status);
 
     return (
         <div className="w-4/5">
             {isLoadingCard ? (
+                // carregando(skeleton)
                 <div className="flex justify-center items-center">
                     <CardWithData
                         loading={true}
                         id={1}
-                        date={new Date("01-01-2024 00:00:00")}
+                        date={new Date('01-01-2024 00:00:00')}
                         active={0}
                         status={1}
-                        process_name={""}
+                        process_name={''}
                         showButton={false}
                     />
                 </div>
@@ -604,6 +665,7 @@ export default function DataTable() {
                         active={dataTable.active}
                         status={dataTable.status}
                         process_name={dataTable.process_name}
+                        unsyncronized={dataTable.usyncronized}
                         showButton={false}
                         lastLogs={lastLogs.slice().reverse()}
                         interval_description={dataTable.interval_description}
@@ -614,10 +676,10 @@ export default function DataTable() {
                     <CardWithData
                         unsyncronized={true}
                         id={0}
-                        date={new Date("01-01-2024 00:00:00")}
+                        date={new Date('01-01-2024 00:00:00')}
                         active={1}
                         status={2}
-                        process_name={""}
+                        process_name={''}
                         showButton={false}
                     />
                 </div>
@@ -714,7 +776,7 @@ export default function DataTable() {
                                                             key={row.id}
                                                             data-state={
                                                                 row.getIsSelected() &&
-                                                                "selected"
+                                                                'selected'
                                                             }
                                                         >
                                                             {row
@@ -767,10 +829,10 @@ export default function DataTable() {
                                                             <LoaderIcon />
                                                         </div>
                                                     ) : (
-                                                        "Carrregar mais"
+                                                        'Carrregar mais'
                                                     )
                                                 ) : (
-                                                    "Nao tem mais logs"
+                                                    'Nao tem mais logs'
                                                 )}
                                             </Button>
                                             <Button
@@ -778,7 +840,7 @@ export default function DataTable() {
                                                 onClick={getData}
                                                 disabled={isLoadingData}
                                             >
-                                                {" "}
+                                                {' '}
                                                 Recarregar dados
                                             </Button>
                                         </div>

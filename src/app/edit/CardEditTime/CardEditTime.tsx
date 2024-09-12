@@ -86,17 +86,19 @@ export function CardEditTime({ date, onSave }: CardEditTimeProps) {
                                 hoverTitle ? 'justify-evenly' : 'justify-center'
                             }`}
                         >
-                            <AnimatePresence>
-                                <motion.div
-                                    initial={{ opacity: 0, scale: 0.9 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.9 }}
-                                    transition={{ duration: 0.5 }}
-                                    style={{
-                                        fontSize: 'clamp(0.1rem)',
-                                    }}
-                                >
-                                    {hoverTitle ? (
+                            <AnimatePresence mode="wait">
+                                {hoverTitle ? (
+                                    <motion.div
+                                        key="hoverTitle"
+                                        initial={{ x: '100%', opacity: 0 }}
+                                        animate={{ x: 0, opacity: 1 }}
+                                        exit={{ x: '-100%', opacity: 0 }}
+                                        transition={{
+                                            duration: 0.5,
+                                            ease: 'easeInOut',
+                                        }}
+                                        className="mx-0.5 my-3"
+                                    >
                                         <div className="mx-0.5 my-3   ">
                                             <div className="flex justify-between m-2 my-4">
                                                 <DialogDescription className="text-[1rem] ">
@@ -138,7 +140,19 @@ export function CardEditTime({ date, onSave }: CardEditTimeProps) {
                                                 </CardTitle>
                                             </div>
                                         </div>
-                                    ) : (
+                                    </motion.div>
+                                ) : (
+                                    <motion.div
+                                        key="nonHoverTitle"
+                                        initial={{ x: '100%', opacity: 0 }}
+                                        animate={{ x: 0, opacity: 1 }}
+                                        exit={{ x: '-100%', opacity: 0 }}
+                                        transition={{
+                                            duration: 0.5,
+                                            ease: 'easeInOut',
+                                        }}
+                                        className="m-4"
+                                    >
                                         <DialogTitle className="m-4 text-[1.8rem]">
                                             {date.interval_value}{' '}
                                             {date.interval_type
@@ -147,26 +161,41 @@ export function CardEditTime({ date, onSave }: CardEditTimeProps) {
                                                   )
                                                 : 'Tempo não foi definido'}
                                         </DialogTitle>
-                                    )}
-                                </motion.div>
+                                    </motion.div>
+                                )}
                             </AnimatePresence>
                             <AnimatePresence>
-                                <motion.div
-                                    initial={{ opacity: 0, scale: 0.9 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.9 }}
-                                    transition={{ duration: 0.5 }}
-                                >
-                                    {hoverDescription ? (
+                                {hoverDescription ? (
+                                    <motion.div
+                                        key="hoverDescription"
+                                        initial={{ x: '100%', opacity: 0 }}
+                                        animate={{ x: 0, opacity: 1 }}
+                                        exit={{ x: '-100%', opacity: 0 }}
+                                        transition={{
+                                            duration: 0.3,
+                                            ease: 'easeInOut',
+                                        }}
+                                    >
                                         <DialogDescription className="text-[1rem] text-left">
                                             Clique para editar
                                         </DialogDescription>
-                                    ) : (
+                                    </motion.div>
+                                ) : (
+                                    <motion.div
+                                        key="nonHoverDescription"
+                                        initial={{ x: '100%', opacity: 0 }}
+                                        animate={{ x: 0, opacity: 1 }}
+                                        exit={{ x: '-100%', opacity: 0 }}
+                                        transition={{
+                                            duration: 0.3,
+                                            ease: 'easeInOut',
+                                        }}
+                                    >
                                         <CardFooter className="text-[1.3rem]">
                                             Intervalo de Sincronização
                                         </CardFooter>
-                                    )}
-                                </motion.div>
+                                    </motion.div>
+                                )}
                             </AnimatePresence>
                         </div>
                     </Card>
