@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\SyncControlConfig;
 use App\Models\SyncControlLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 class SyncControlLogsController extends Controller
 {
@@ -143,6 +144,10 @@ class SyncControlLogsController extends Controller
                         'config' => $config,
                     ]
                 ], 404);
+            }
+
+            foreach ($logs as $log) {
+                $log->runtime_second = Carbon::parse($log->runtime_second)->timestamp;
             }
 
             return response()->json([
