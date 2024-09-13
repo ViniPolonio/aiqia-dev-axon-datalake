@@ -88,7 +88,7 @@ class SyncControlLogsController extends Controller
 
             $lastLog = SyncControlLog::where('sync_control_config_id', $id)
                 ->whereNotNull('finished_at')
-                ->where('finished_at', '!=', '')
+                ->whereNot('finished_at', '=', null)
                 ->orderBy('finished_at', 'desc')
                 ->select(['finished_at'])
                 ->first();
@@ -130,9 +130,10 @@ class SyncControlLogsController extends Controller
                 ], 400);
             }
 
-            $logs = SyncControlLog::where('sync_control_config_id', $id)->where('finished_at', '!=', '')
-                ->orderBy('finished_at', 'desc')
-                ->cursorPaginate($perPage, ['*'], 'cursor', $cursor);
+            $logs = SyncControlLog::where('sync_control_config_id', operator: $id)
+                                ->whereNot('finished_at', '=', null)
+                                ->orderBy('finished_at', 'desc')
+                                ->cursorPaginate($perPage, ['*'], 'cursor', $cursor);
 
             if ($logs->isEmpty()) {
                 return response()->json([
