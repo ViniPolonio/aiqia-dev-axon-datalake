@@ -8,7 +8,10 @@ use App\Models\SyncControlConfig;
 use App\Models\SyncControlLog;
 use App\Models\SyncControlTimeConfig;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
+
 class SyncControlConfigController extends Controller
+
 {
     public function index() 
     {
@@ -59,7 +62,7 @@ class SyncControlConfigController extends Controller
                     ->map(function ($log) {
                         return [
                             'success' => $log->success,
-                            'runtime_second' => $log->runtime_second,
+                            'runtime_second' => Carbon::parse($log->runtime_second)->timestamp,
                             'finished_at' => $log->finished_at,
                             'error' => $log->error ?? null,
                         ];
