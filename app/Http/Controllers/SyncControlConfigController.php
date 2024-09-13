@@ -190,37 +190,60 @@ class SyncControlConfigController extends Controller
                 ], 404); 
             }
 
-            $intervalMinutesId = $interval['intervals']['interval_in_minutes']['values'][0]['id'] ?? null;
-            $intervalHoursId = $interval['intervals']['interval_in_hours']['values'][0]['id'] ?? null;
-            
+            $intervalMinutesValues = $interval['intervals']['interval_in_minutes']['values'] ?? [];
+            $intervalHoursValues = $interval['intervals']['interval_in_hours']['values'] ?? [];
             $intervalDaysValues = $interval['intervals']['interval_in_days']['values'] ?? [];
 
-            $intervalInDays = [];
-            foreach ($intervalDaysValues as $dayInterval) {
-                $intervalInDays[] = [
-                    'id'    => $dayInterval['id'],
-                    'value' => $dayInterval['value'],
+            $minutesStatus = [];
+            foreach ($intervalMinutesValues as $minuteInterval) {
+                $syncControlLog = SyncControlLog::where('sync_control_time_config_id', $minuteInterval['id'])
+                    ->where('sync_control_config_id', $id)
+                    ->first();
+
+                $finishedAt = $syncControlLog ? $syncControlLog->finished_at : null;
+                $timeDifference = now()->diffInMinutes($finishedAt);
+
+                $status = ($timeDifference > $minuteInterval) ? 'active' : 'inactive';
+                $minutesStatus[] = [
+                    'id' => $minuteInterval['id'],
+                    'value' => $minuteInterval['value'],
+                    'status' => $status
                 ];
             }
 
-            $syncControlLog = SyncControlLog::where('sync_control_time_config_id', $intervalDaysValues[0]['id'] ?? null)  // Pega o primeiro intervalo de dias para log
-                ->orWhere('sync_control_time_config_id', $intervalHoursId)
-                ->orWhere('sync_control_time_config_id', $intervalMinutesId)
-                ->where('sync_control_config_id', $id)
-                ->first();
+            // Horas
+            $hoursStatus = [];
+            foreach ($intervalHoursValues as $hourInterval) {
+                $intervalValueInMinutes = $hourInterval['value'] * 60;
 
-            $finishedAt = $syncControlLog ? $syncControlLog->finished_at : null;
+                $syncControlLog = SyncControlLog::where('sync_control_time_config_id', $hourInterval['id'])
+                    ->where('sync_control_config_id', $id)
+                    ->first();
 
-            $now = now();
-            $timeDifference = $now->diffInMinutes($finishedAt);
+                $finishedAt = $syncControlLog ? $syncControlLog->finished_at : null;
+                $timeDifference = now()->diffInMinutes($finishedAt);
 
-            $intervalInMinutes = $interval['intervals']['interval_in_minutes']['values'][0]['value'] ?? 0;
-            $intervalInHours = ($interval['intervals']['interval_in_hours']['values'][0]['value'] ?? 0) * 60;
+                $status = ($timeDifference > $intervalValueInMinutes) ? 'active' : 'inactive';
+                $hoursStatus[] = [
+                    'id' => $hourInterval['id'],
+                    'value' => $hourInterval['value'],
+                    'status' => $status
+                ];
+            }
 
             $daysStatus = [];
-            foreach ($intervalInDays as $dayInterval) {
-                $intervalDaysValueInMinutes = $dayInterval['value'] * 1440; // 1 dia = 1440 minutos
-                $status = ($timeDifference < $intervalDaysValueInMinutes) ? 'active' : 'inactive';
+            foreach ($intervalDaysValues as $dayInterval) {
+                $intervalValueInMinutes = $dayInterval['value'] * 1440; // 1 dia = 1440 minutos
+
+                $syncControlLog = SyncControlLog::where('sync_control_time_config_id', $dayInterval['id'])
+                    ->where('sync_control_config_id', $id)
+                    ->first();
+
+                $finishedAt = $syncControlLog ? $syncControlLog->finished_at : null;
+                $timeDifference = now()->diffInMinutes($finishedAt);
+
+                // Status correto: ativo se o tempo decorrido for menor que o valor do intervalo
+                $status = ($timeDifference < $intervalValueInMinutes) ? 'active' : 'inactive';
                 $daysStatus[] = [
                     'id' => $dayInterval['id'],
                     'value' => $dayInterval['value'],
@@ -228,19 +251,10 @@ class SyncControlConfigController extends Controller
                 ];
             }
 
-            // Cálculo do status de minutos e horas
-            $minutesStatus = ($timeDifference < $intervalInMinutes) ? 'active' : 'inactive';
-            $hoursStatus = ($timeDifference < $intervalInHours) ? 'active' : 'inactive';
-
-            $return->interval_in_minutes = [
-                'value'  => $interval['intervals']['interval_in_minutes']['values'][0]['value'],
-                'status' => $minutesStatus,
-            ];
-            $return->interval_in_hours = [
-                'value'  => $interval['intervals']['interval_in_hours']['values'][0]['value'],
-                'status' => $hoursStatus
-            ];
-            $return->interval_in_days = $daysStatus; 
+            // Adicionando os intervalos no retorno
+            $return->interval_in_minutes = $minutesStatus;
+            $return->interval_in_hours = $hoursStatus;
+            $return->interval_in_days = $daysStatus;
 
             return response()->json([
                 'status' => 1,
@@ -256,15 +270,16 @@ class SyncControlConfigController extends Controller
                     'interval_in_days' => $return->interval_in_days, 
                 ],
             ], 200);
-        } 
-
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             return response()->json([
                 'status' => 0,
                 'message' => 'An error has occurred: ' . $e->getMessage()
             ], 500);
         }
     }
+
+
+
 
 
 
