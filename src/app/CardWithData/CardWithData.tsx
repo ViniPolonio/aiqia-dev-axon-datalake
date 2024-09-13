@@ -57,7 +57,6 @@ export function CardWithData({
     }, [initialActive]);
 
     const router = useRouter();
-    // console.log(date)
     const formateDate = format(date, 'dd/MM/yyyy HH:mm:ss');
     const firstData = lastLogs[0]?.finished_at
         ? format(new Date(lastLogs[0].finished_at), 'dd/MM/yyyy')
@@ -79,7 +78,6 @@ export function CardWithData({
         ? 'w-full h-full'
         : 'w-[60vw] h-[40vh]';
 
-    console.log(unsyncronized, 'unsyncronized');
     if (loading) {
         return (
             <Card

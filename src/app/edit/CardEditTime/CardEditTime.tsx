@@ -73,7 +73,7 @@ export function CardEditTime({ date, onSave }: CardEditTimeProps) {
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger className="m-3" asChild>
+            <DialogTrigger className="m-3 mb-9" asChild>
                 <motion.div
                     whileHover={{ scaleY: 1.3, scaleX: 1.2, translateY: 50 }}
                     transition={{ duration: 1, ease: 'easeInOut' }}

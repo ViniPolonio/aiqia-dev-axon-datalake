@@ -60,30 +60,32 @@ export default function Home() {
                        item.config_data.intervals.interval_in_hours,
                        item.config_data.intervals.interval_in_days,
                    ];
+                   console.log(timeConfigs);
+                    const status =
+                        timeConfigs.some((row: any[]) =>
+                            row.some(
+                                (timeConfig: any) =>
+                                    timeConfig.status === 'inactive' &&
+                                    timeConfig.value !== 0
+                            )
+                        ) ||
+                        timeConfigs.every((row: any[]) =>
+                            row.every(
+                                (timeConfig: any) => timeConfig.value === 0
+                            )
+                        )
+                            ? 3
+                            : item.logs && item.logs.length > 0
+                            ? item.logs[0].success
+                            : 2;
+
+                
                     return {
                         id: item.config_data.id,
                         process_name: item.config_data.process_name,
                         active: item.config_data.active,
                         timeConfigs: timeConfigs,
-                        status:
-                            item.logs === null
-                                ? 2
-                                : timeConfigs.some(
-                                      (timeConfig: TimeConfigs) => {
-                                          return (
-                                              timeConfig.status ===
-                                                  'inactive' &&
-                                              timeConfig.value !== 0
-                                          );
-                                      }
-                                  ) ||
-                                  timeConfigs.reduce(
-                                      (acc, timeConfig) =>
-                                          acc + timeConfig.value,
-                                      0
-                                  ) === 0
-                                ? 3
-                                : item.logs[0].success,
+                        status: status,
                         created_at: new Date(item.config_data.created_at),
                         finished_at:
                             item.logs === null

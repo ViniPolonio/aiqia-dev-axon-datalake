@@ -9,7 +9,6 @@ import {
 } from '@/components/ui/tooltip';
 interface IntervaloSincronizacaoProps {
     intervaloSincronizacao: Array<any>;
-    // intervaloSincronizacao: string;
     showButton?: boolean;
     className?: string;
     active: number;
@@ -38,11 +37,20 @@ export default function IntervaloSincronizacao({
         }
     };
 
+    const minutosIntervaloSincronizacao = intervaloSincronizacao[0];
+    const horasIntervaloSincronizacao = intervaloSincronizacao[1];
+    const diasIntervaloSincronizacao = intervaloSincronizacao[2];
+
+    console.log(minutosIntervaloSincronizacao)
+    console.log(horasIntervaloSincronizacao)
+   console.log(diasIntervaloSincronizacao)
+   console.log(showButton + "butao")
+
+
     const formatStatus = (status: string) => {
         return status === 'active' ? 'Success' : 'Unsynchronized';
     };
     const textClassName = (status: string) => {
-
         return active === 0
             ? 'text-center text-balance text-gray-600'
             : status === 'active'
@@ -57,122 +65,266 @@ export default function IntervaloSincronizacao({
             ? 'border-green-500'
             : 'border-yellow-500';
     };
+
+    const cardClass = showButton
+        ? `p-1  border-2 w-[7vw]`
+        : `p-1  mx-3 border-2 w-[7vw]`;
+    const teste = (intervaloSincronizacao: Array<any>, type: number, teste?:number) => {
+      if (Array.isArray(intervaloSincronizacao)) {
+        if (intervaloSincronizacao.length > 1) {
+            return (
+                <div className="w-1/3">
+                    {intervaloSincronizacao ? (
+                        intervaloSincronizacao.map(
+                            (item, index) =>
+                                item.value != 0 && (
+                                    <h1
+                                        key={index}
+                                        className={`${className} text-center text-balance truncate`}
+                                    >
+                                        {showButton ? (
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        {index == 0 && (
+                                                            <Card
+                                                                className={`${cardClass} ${borderClassName(
+                                                                    item.status
+                                                                )}`}
+                                                            >
+                                                                <CardTitle
+                                                                    className={`text-[1.3rem] ${textClassName(
+                                                                        item.status
+                                                                    )}`}
+                                                                >
+                                                                    {item.value +
+                                                                        ' ' +
+                                                                        formatType(
+                                                                            type
+                                                                        )}
+                                                                </CardTitle>
+                                                                <CardDescription>
+                                                                    {formatStatus(
+                                                                        item.status
+                                                                    )}
+                                                                </CardDescription>
+                                                            </Card>
+                                                        )}
+                                                    </TooltipTrigger>
+                                                    <TooltipContent className="">
+                                                        <ul className="p-2">
+                                                            {intervaloSincronizacao
+                                                                .slice(1)
+                                                                .map(
+                                                                    (
+                                                                        item,
+                                                                        index
+                                                                    ) => (
+                                                                        <li
+                                                                            key={
+                                                                                index
+                                                                            }
+                                                                            className="my-2"
+                                                                        >
+                                                                            <Card
+                                                                                className={`${cardClass} ${borderClassName(
+                                                                                    item.status
+                                                                                )}`}
+                                                                            >
+                                                                                <CardTitle
+                                                                                    className={`text-[1.3rem] ${textClassName(
+                                                                                        item.status
+                                                                                    )}`}
+                                                                                >
+                                                                                    {item.value +
+                                                                                        ' ' +
+                                                                                        formatType(
+                                                                                            type
+                                                                                        )}
+                                                                                </CardTitle>
+                                                                                <CardDescription>
+                                                                                    {formatStatus(
+                                                                                        item.status
+                                                                                    )}
+                                                                                </CardDescription>
+                                                                            </Card>
+                                                                        </li>
+                                                                    )
+                                                                )}
+                                                        </ul>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
+                                        ) : (
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        {index == 0 && (
+                                                            <Card
+                                                                className={`${cardClass} ${borderClassName(
+                                                                    item.status
+                                                                )}`}
+                                                            >
+                                                                <CardTitle
+                                                                    className={`text-[1.3rem] ${textClassName(
+                                                                        item.status 
+                                                                    )}`}
+                                                                >
+                                                                    {item.value +
+                                                                        ' ' +
+                                                                        formatType(
+                                                                            type
+                                                                        )}
+                                                                </CardTitle>
+                                                                <CardDescription>
+                                                                    {formatStatus(
+                                                                        item.status
+                                                                    )}
+                                                                </CardDescription>
+                                                            </Card>
+                                                        )}
+                                                    </TooltipTrigger>
+                                                    <TooltipContent className="">
+                                                        <ul className="p-2">
+                                                            {intervaloSincronizacao
+                                                                .slice(1)
+                                                                .map(
+                                                                    (
+                                                                        item,
+                                                                        index
+                                                                    ) => (
+                                                                        <li
+                                                                            key={
+                                                                                index
+                                                                            }
+                                                                            className="my-2"
+                                                                        >
+                                                                            <Card
+                                                                                className={`${cardClass} ${borderClassName(
+                                                                                    item.status
+                                                                                )}`}
+                                                                            >
+                                                                                <CardTitle
+                                                                                    className={`text-[1.3rem] ${textClassName(
+                                                                                        item.status
+                                                                                    )}`}
+                                                                                >
+                                                                                    {item.value +
+                                                                                        ' ' +
+                                                                                        formatType(
+                                                                                            type
+                                                                                        ) }
+                                                                                </CardTitle>
+                                                                                <CardDescription>
+                                                                                    {formatStatus(
+                                                                                        item.status
+                                                                                    ) + ' ' + index}
+                                                                                </CardDescription>
+                                                                            </Card>
+                                                                        </li>
+                                                                    )
+                                                                )}
+                                                        </ul>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
+                                        )}
+                                    </h1>
+                                )
+                        )
+                    ) : (
+                        <h1
+                            className={`${className} text-center text-balance truncate`}
+                        >
+                            <Card
+                                className={`p-1 border-2 w-[7vw] border-gray-500`}
+                            >
+                                <CardTitle
+                                    className={`text-[1.3rem] border-gray-500 `}
+                                >
+                                    --
+                                </CardTitle>
+                                <CardDescription>
+                                    {'Não Possui'}
+                                </CardDescription>
+                            </Card>
+                        </h1>
+                    )}
+                </div>
+            );
+        }
+else {return (
+    <div className="w-1/3">
+        {intervaloSincronizacao.length != 0 ? (
+            intervaloSincronizacao.map(
+                (item, index) =>
+                    item.value != 0 && (
+                        <h1
+                            key={index}
+                            className={`${className} text-center text-balance truncate`}
+                        >
+                            {showButton ? (
+                                <Card
+                                    className={`p-1 border-2 w-[7vw] ${borderClassName(
+                                        item.status
+                                    )}`}
+                                >
+                                    <CardTitle
+                                        className={`text-[1.3rem] ${textClassName(
+                                            item.status
+                                        )}`}
+                                    >
+                                        {item.value + ' ' + formatType(type)}
+                                    </CardTitle>
+                                    <CardDescription>
+                                        {formatStatus(item.status)}
+                                    </CardDescription>
+                                </Card>
+                            ) : (
+                                <Card
+                                    className={`${cardClass} ${borderClassName(
+                                        item.status
+                                    )}`}
+                                >
+                                    <CardTitle
+                                        className={`text-[1.3rem] ${textClassName(
+                                            item.status
+                                        )}`}
+                                    >
+                                        {item.value + ' ' + formatType(type)}
+                                    </CardTitle>
+                                    <CardDescription>
+                                        {formatStatus(item.status)}
+                                    </CardDescription>
+                                </Card>
+                            )}
+                        </h1>
+                    )
+            )
+        ) : (
+            <h1 className={`${className} text-center text-balance truncate`}>
+                <Card className={`p-1 border-2 w-[7vw] border-gray-500`}>
+                    <CardTitle className={`text-[1.3rem] border-gray-500 `}>
+                        --
+                    </CardTitle>
+                    <CardDescription>{'Não Possui'}</CardDescription>
+                </Card>
+            </h1>
+        )}
+    </div>
+);}}
+        
+    };
     return (
         <div>
             <CardDescription className={`${className} pb-2`}>
                 {'Intervalo entre Sincronizações:'}
             </CardDescription>
             <div className="flex justify-evenly truncate ">
-                {/* {intervaloSincronizacao?.length > 4 ? (
-                    <>
-                        {intervaloSincronizacao.map((item, index) => (
-                            <h1
-                                key={index}
-                                className={`${className} text-center text-balance truncate`}
-                            >
-                                {item.value}{' '}
-                            </h1>
-                        ))}
-
-                        <TooltipProvider delayDuration={100}>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <span>
-                                        <EllipsisIcon />
-                                    </span>
-                                </TooltipTrigger>
-                                <TooltipContent className="ml-3">
-                                    <ul>
-                                        {intervaloSincronizacao
-                                            .slice(0, 4)
-                                            .map((item, index) => (
-                                                <li key={index}>
-                                                    {item.value}
-                                                </li>
-                                            ))}
-                                    </ul>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    </>
-                ) : ( */}
-                {intervaloSincronizacao
-                    ? intervaloSincronizacao.map((item, index) =>
-                          item.value != 0 ? (
-                              <h1
-                                  key={index}
-                                  className={`${className} text-center text-balance truncate`}
-                              >
-                                  {showButton ? (
-                                      <Card
-                                          className={`p-1 border-2 w-[7vw] ${borderClassName(
-                                              item.status
-                                          )}`}
-                                      >
-                                          <CardTitle
-                                              className={`text-[1.3rem] ${textClassName(
-                                                  item.status
-                                              )}`}
-                                          >
-                                              {item.value +
-                                                  ' ' +
-                                                  formatType(index)}
-                                          </CardTitle>
-                                          <CardDescription>
-                                              {formatStatus(item.status)}
-                                          </CardDescription>
-                                      </Card>
-                                  ) : (
-                                      <Card
-                                          className={`px-4 border-2 w-[7vw] mx-3 flex flex-col justify-center align-center ${borderClassName(
-                                              item.status
-                                          )}`}
-                                      >
-                                          <CardTitle
-                                              className={`text-[1.3rem] ${textClassName(
-                                                  item.status
-                                              )}`}
-                                          >
-                                              {item.value +
-                                                  ' ' +
-                                                  formatType(index)}
-                                          </CardTitle>
-                                          <CardDescription>
-                                              {formatStatus(item.status)}
-                                          </CardDescription>
-                                      </Card>
-                                  )}
-                              </h1>
-                          ) : (
-                              <h1
-                                  key={index}
-                                  className={`${className} text-center text-balance truncate`}
-                              >
-                                  <Card
-                                      className={`p-1 border-2 w-[7vw] border-gray-500`}
-                                  >
-                                      <CardTitle
-                                          className={`text-[1.3rem] border-gray-500 `}
-                                      >
-                                          --
-                                      </CardTitle>
-                                      <CardDescription>
-                                          {'Não Possui'}
-                                      </CardDescription>
-                                  </Card>
-                              </h1>
-                          )
-                      )
-                    : null}
-                {/* )} */}
+                {teste(minutosIntervaloSincronizacao, 0)}
+                {teste(horasIntervaloSincronizacao, 1)}
+                {teste(diasIntervaloSincronizacao, 2)}
             </div>
-            {/* <div className="flex justify-evenly truncate">
-                <h1
-                    className={`${className} text-center text-balance truncate`}
-                >
-                    {intervaloSincronizacao}
-                </h1>
-            </div> */}
         </div>
     );
 }

@@ -34,6 +34,7 @@ async function storeControllConfig(controllData){
 async function getControllById(id) {
     try {
         const response = await controlConfig.get(`sync-control-config/${id}`);
+        console.log(response)
         return response.data;
     } catch (error) {
         console.error("Error geting the config: ", error);

@@ -67,7 +67,7 @@ export type Data = {
     status: number;
     created_at: Date;
     finished_at: Date;
-    interval_description?: Array<string>;
+    interval_description?: Array<any>;
     usyncronized?: boolean;
 };
 
@@ -75,7 +75,11 @@ export const defaultData: Data = {
     id: 0,
     process_name: '',
     activated_based_timer: 0,
-    interval_description: ['Sem dados', 'teste', 'teste'],
+    interval_description: [
+        [0, 'active'],
+        [0, 'active'],
+        [0, 'active'],
+    ],
     active: 0,
     status: 2,
     created_at: new Date(),
@@ -425,11 +429,32 @@ export default function DataTable() {
             const data = ResultProcess.data;
             console.log(data);
 
-            timeConfigs = [
-                data.interval_in_minutes,
-                data.interval_in_hours,
-                data.interval_in_days,
+            
+            const timeConfigs = [
+                data.interval_in_minutes.length === undefined ? Array<any>(data.interval_in_minutes) : data.interval_in_minutes,
+                data.interval_in_hours.length === undefined ? Array<any>(data.interval_in_hours) : data.interval_in_hours,
+                data.interval_in_days.length === undefined ? Array<any>(data.interval_in_days) : data.interval_in_days,
             ];
+
+            
+            console.log(Array<any>(timeConfigs[0]));
+            console.log(timeConfigs[0].length === undefined ? Array<any>(timeConfigs[0]) : timeConfigs[0]);
+            console.log(timeConfigs);
+            const status =
+                timeConfigs.some((row: any[]) =>
+                    row.some(
+                        (timeConfig: any) =>
+                            timeConfig.status === 'inactive' &&
+                            timeConfig.value !== 0
+                    )
+                ) ||
+                timeConfigs.every((row: any[]) =>
+                    row.every((timeConfig: any) => timeConfig.value === 0)
+                )
+                    ? 3
+                    : data.logs && data.logs.length > 0
+                    ? data.logs[0].success
+                    : 2;
 
             configTables = {
                 id: data.id,
@@ -440,7 +465,7 @@ export default function DataTable() {
                 created_at: new Date(data.created_at),
                 activated_based_timer: data.interval_status,
                 finished_at: new Date(0),
-                interval_description: data.interval_description,
+                interval_description: timeConfigs,
             };
 
             console.log(configTables);
@@ -469,6 +494,21 @@ export default function DataTable() {
             setHasMore(has_more);
 
             if (Result.status === 1) {
+                const status =
+                    timeConfigs.some((row: any[]) =>
+                        row.some(
+                            (timeConfig: any) =>
+                                timeConfig.status === 'inactive' &&
+                                timeConfig.value !== 0
+                        )
+                    ) ||
+                    timeConfigs.every((row: any[]) =>
+                        row.every((timeConfig: any) => timeConfig.value === 0)
+                    )
+                        ? 3
+                        : logs && logs.length > 0
+                        ? logs[0].success
+                        : 2;
                 configTables = {
                     ...configTables,
                     usyncronized: false,
@@ -476,21 +516,7 @@ export default function DataTable() {
                         logs.data.length === 0
                             ? new Date(0)
                             : new Date(logs.data[0].finished_at),
-                    status:
-                        logs.data.length === 0
-                            ? 2
-                            : timeConfigs.some((timeConfig: TimeConfigs) => {
-                                  return (
-                                      timeConfig.status === 'inactive' &&
-                                      timeConfig.value !== 0
-                                  );
-                              }) ||
-                              timeConfigs.reduce(
-                                  (acc, timeConfig) => acc + timeConfig.value,
-                                  0
-                              ) === 0
-                            ? 3
-                            : logs.data[0].success,
+                    status: status,
                 };
 
                 indicadoresData = logs.data.map((log: any) => ({
@@ -543,9 +569,13 @@ export default function DataTable() {
 
         try {
             // Busca os dados do card
+
             const { configTables, timeConfigs } = await fetchCardData(id);
+                        console.log('haum?');
+
             setDataTable(configTables);
 
+            console.log('comoasim?');
             // Busca os logs e atualiza os dados do card e logs
             await fetchLogsData(id, configTables, timeConfigs);
         } catch (error) {
@@ -631,11 +661,6 @@ export default function DataTable() {
             setFilteredLogs(logs);
         }
     }, [dateRange, logs]);
-
-    // console.log(dataTable?.created_at, dataTable?.finished_at, lastLogs);
-    {
-        console.log(logs);
-    }
     console.log(dataTable?.status);
 
     return (

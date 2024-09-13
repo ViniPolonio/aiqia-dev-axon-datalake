@@ -7,12 +7,12 @@ import EditForm from "../EditForm";
 export default function Edit() {
 
     return (
-        <main className="">
+        <main className="max-h-screen overflow-y-auto">
             <div>
-                <ReturnButton/>
+                <ReturnButton />
             </div>
             <div className="flex justify-center">
-                <EditForm/>
+                <EditForm />
             </div>
         </main>
     );

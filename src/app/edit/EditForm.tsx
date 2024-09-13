@@ -35,12 +35,12 @@ export default function EditForm() {
     }, []);
 
     return (
-        <div className="flex flex-col items-center justify-between">
+        <div className="flex flex-col items-center justify-between ">
             <div className="p-2">
                 <EditTable />
             </div>
 
-            <div className="p-2 flex flex-row">
+            <div className="p-2 flex flex-row flex-wrap justify-between">
                 {loading ? (
                     <h1>carregando...</h1>
                 ) : (
