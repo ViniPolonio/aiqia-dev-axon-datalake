@@ -55,6 +55,7 @@ class SyncControlConfigController extends Controller
                 // Obter os últimos 20 logs
                 $logs = SyncControlLog::where('sync_control_config_id', $config->id)
                     ->whereNotNull('finished_at')
+                    ->whereNot('finished_at', '=', null)
                     ->orderBy('finished_at', 'desc')
                     ->take(20)
                     ->select(['sync_control_config_id', 'success', 'runtime_second', 'finished_at', 'error'])
