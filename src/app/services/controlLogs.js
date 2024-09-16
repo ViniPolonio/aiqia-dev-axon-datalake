@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const ConfigsTableApi = axios.create({ baseURL: "http://127.0.0.1:8000/api" });
+const ConfigsTableApi = axios.create({ baseURL: "http://192.168.1.153:8008/api" });
 
 async function getLogsById(id) {
     try {

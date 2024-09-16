@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const controlConfig = axios.create({ baseURL: "http://127.0.0.1:8000/api/" });
+const controlConfig = axios.create({ baseURL: "http://192.168.1.153:8008/api/" });
 
 async function getControlConfig(nextCursor) {
     try {
