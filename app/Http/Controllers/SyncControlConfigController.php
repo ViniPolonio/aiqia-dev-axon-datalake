@@ -16,11 +16,9 @@ class SyncControlConfigController extends Controller
     public function index() 
     {
         try {
-            // Obter todas as configurações que não foram excluídas
             $configs = SyncControlConfig::whereNull('deleted_at')->get();
             $ids = $configs->pluck('id');
 
-            // Consultar tempos de configuração
             $consultTimeConfig = $this->consultTimer($ids);
             
             if (isset($consultTimeConfig['status']) && $consultTimeConfig['status'] == 0) {
@@ -44,7 +42,6 @@ class SyncControlConfigController extends Controller
                     return null;
                 }
 
-                // Obter o último log concluído
                 $lastLog = SyncControlLog::where('sync_control_config_id', $config->id)
                     ->whereNotNull('finished_at')
                     ->where('finished_at', '!=', '')
@@ -52,7 +49,6 @@ class SyncControlConfigController extends Controller
                     ->select(['sync_control_config_id', 'success', 'runtime_second', 'finished_at', 'error'])
                     ->first();
                     
-                // Obter os últimos 20 logs
                 $logs = SyncControlLog::where('sync_control_config_id', $config->id)
                     ->whereNotNull('finished_at')
                     ->whereNot('finished_at', '=', null)
@@ -77,7 +73,6 @@ class SyncControlConfigController extends Controller
                     'interval_in_days' => []
                 ];
 
-                // Popula os intervalos
                 if ($configTime) {
                     foreach ($configTime['intervals']['interval_in_minutes']['values'] as $interval) {
                         $intervals['interval_in_minutes'][] = $interval;
@@ -90,7 +85,6 @@ class SyncControlConfigController extends Controller
                     }
                 }
 
-                // Função para calcular o status do intervalo
                 $calculateStatus = function ($intervalValue, $intervalUnit, $lastLogTime) {
                     if ($intervalValue <= 0 || !$lastLogTime) {
                         return 'inactive';
@@ -107,7 +101,6 @@ class SyncControlConfigController extends Controller
                     return $timeDifference <= $intervalInMinutes ? 'active' : 'inactive';
                 };
 
-                // Calcula status para cada intervalo e os adiciona ao array
                 foreach ($intervals as $key => &$intervalList) {
                     foreach ($intervalList as &$interval) {
                         $interval['status'] = $calculateStatus($interval['value'], explode('_', $key)[2], $lastLog?->finished_at);
@@ -213,7 +206,6 @@ class SyncControlConfigController extends Controller
                 ];
             }
 
-            // Horas
             $hoursStatus = [];
             foreach ($intervalHoursValues as $hourInterval) {
                 $intervalValueInMinutes = $hourInterval['value'] * 60;
@@ -244,7 +236,6 @@ class SyncControlConfigController extends Controller
                 $finishedAt = $syncControlLog ? $syncControlLog->finished_at : null;
                 $timeDifference = now()->diffInMinutes($finishedAt);
 
-                // Status correto: ativo se o tempo decorrido for menor que o valor do intervalo
                 $status = ($timeDifference < $intervalValueInMinutes) ? 'active' : 'inactive';
                 $daysStatus[] = [
                     'id' => $dayInterval['id'],
@@ -253,7 +244,6 @@ class SyncControlConfigController extends Controller
                 ];
             }
 
-            // Adicionando os intervalos no retorno
             $return->interval_in_minutes = $minutesStatus;
             $return->interval_in_hours = $hoursStatus;
             $return->interval_in_days = $daysStatus;
@@ -431,15 +421,15 @@ class SyncControlConfigController extends Controller
             ];
 
             foreach ($group as $item) {
-                if ($item->interval_type == 3) { // Dias
+                if ($item->interval_type == 3) { 
                     $intervalSum['dias']['valor'] += $item->interval_value;
-                    $intervalSum['dias']['id'] = $item->id; // Armazena o id do intervalo de dias
-                } elseif ($item->interval_type == 2) { // Horas
+                    $intervalSum['dias']['id'] = $item->id; 
+                } elseif ($item->interval_type == 2) { 
                     $intervalSum['horas']['valor'] += $item->interval_value;
-                    $intervalSum['horas']['id'] = $item->id; // Armazena o id do intervalo de horas
-                } elseif ($item->interval_type == 1) { // Minutos
+                    $intervalSum['horas']['id'] = $item->id; 
+                } elseif ($item->interval_type == 1) { 
                     $intervalSum['minutos']['valor'] += $item->interval_value;
-                    $intervalSum['minutos']['id'] = $item->id; // Armazena o id do intervalo de minutos
+                    $intervalSum['minutos']['id'] = $item->id; 
                 }
             }
 
@@ -483,17 +473,17 @@ class SyncControlConfigController extends Controller
                 $intervalValue = $item->interval_value;
                 $intervalId = $item->id;
 
-                if ($intervalType == 1) { // Minutos
+                if ($intervalType == 1) { 
                     $intervals['interval_in_minutes'][] = [
                         'id' => $intervalId,
                         'value' => $intervalValue
                     ];
-                } elseif ($intervalType == 2) { // Horas
+                } elseif ($intervalType == 2) { 
                     $intervals['interval_in_hours'][] = [
                         'id' => $intervalId,
                         'value' => $intervalValue
                     ];
-                } elseif ($intervalType == 3) { // Dias
+                } elseif ($intervalType == 3) { 
                     $intervals['interval_in_days'][] = [
                         'id' => $intervalId,
                         'value' => $intervalValue
@@ -501,12 +491,10 @@ class SyncControlConfigController extends Controller
                 }
             }
 
-            // Obter o último tempo de log, se existir
             $lastLogTime = SyncControlLog::where('sync_control_config_id', $group->first()->sync_control_config_id)
                 ->orderBy('finished_at', 'desc')
                 ->value('finished_at');
 
-            // Calcula o status dos intervalos
             $status = function ($intervals, $intervalUnit, $lastLogTime) {
                 if (!$lastLogTime) {
                     return 'inactive';
@@ -519,8 +507,8 @@ class SyncControlConfigController extends Controller
                 foreach ($intervals as $interval) {
                     $intervalValue = $interval['value'];
                     $intervalInMinutes = match ($intervalUnit) {
-                        'days' => $intervalValue * 1440, // 1 dia = 1440 minutos
-                        'hours' => $intervalValue * 60, // 1 hora = 60 minutos
+                        'days' => $intervalValue * 1440, 
+                        'hours' => $intervalValue * 60, 
                         'minutes' => $intervalValue,
                         default => 0,
                     };

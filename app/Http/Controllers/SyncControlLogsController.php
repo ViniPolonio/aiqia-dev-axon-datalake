@@ -152,11 +152,8 @@ class SyncControlLogsController extends Controller
 
             return response()->json([
                 'status' => 1,
-                'data' => [
-                    'config' => $config,
-                    'logs' => $logs,
-                    'has_more' => $logs->hasMorePages()
-                ]
+                'logs' => $logs,
+                'has_more' => $logs->hasMorePages()
             ], 200);
 
         } catch (\Exception $e) {
