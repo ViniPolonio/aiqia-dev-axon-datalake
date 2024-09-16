@@ -196,11 +196,9 @@ export function CardWithData({
             ? 'transition-colors duration-700 hover:bg-green-500'
             : 'transition-colors duration-700 hover:bg-yellow-500';
     const handleHistoric = () => {
-        showButton
-            ? lastLogs.length > 0
-                ? router.push(`/historic/${id}`)
-                : setErrorEmptyLogs(true)
-            : '';
+        
+               router.push(`/historic/${id}`)
+            
     };
     return (
         <div className="relative">
@@ -344,8 +342,7 @@ export function CardWithData({
                                             }
                                         >
                                             <GraphicLastDataLine
-                                                logs={lastLogs
-                                                    .slice(10, 20)}
+                                                logs={lastLogs.slice(10, 20)}
                                                 success={status}
                                                 active={active}
                                             />

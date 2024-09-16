@@ -41,14 +41,11 @@ export default function IntervaloSincronizacao({
     const horasIntervaloSincronizacao = intervaloSincronizacao[1];
     const diasIntervaloSincronizacao = intervaloSincronizacao[2];
 
-    console.log(minutosIntervaloSincronizacao)
-    console.log(horasIntervaloSincronizacao)
-   console.log(diasIntervaloSincronizacao)
-   console.log(showButton + "butao")
+//    
 
 
     const formatStatus = (status: string) => {
-        return status === 'active' ? 'Success' : 'Unsynchronized';
+        return status === 'active' ? 'Sucesso' : 'Não Sincronizado';
     };
     const textClassName = (status: string) => {
         return active === 0
@@ -303,7 +300,7 @@ else {return (
             )
         ) : (
             <h1 className={`${className} text-center text-balance truncate`}>
-                <Card className={`p-1 border-2 w-[7vw] border-gray-500`}>
+                <Card className={`${cardClass} border-gray-500`}>
                     <CardTitle className={`text-[1.3rem] border-gray-500 `}>
                         --
                     </CardTitle>

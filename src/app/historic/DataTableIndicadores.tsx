@@ -131,11 +131,10 @@ export const columns: ColumnDef<Indicadores>[] = [
                     : status === "success"
                     ? "text-green-500"
                     : "";
+            const statusPt = status === "failed" ? "Falhou" : "Sucesso";
 
             return (
-                <div className={`capitalize ${statusClass}`}>
-                    {row.getValue("status")}
-                </div>
+                <div className={`capitalize ${statusClass}`}>{statusPt}</div>
             );
         },
     },
@@ -236,7 +235,7 @@ export const columns: ColumnDef<Indicadores>[] = [
 
             return (
                 <div className="max-w-40 max-h-20 overflow-y-auto whitespace-normal break-words">
-                    {error === "" ? (
+                    {error === "" || error === null ? (
                         "Nenhum erro"
                     ) : (
                         <Dialog>
@@ -391,8 +390,7 @@ export default function DataTable() {
         try {
             const response = await nextPage(linkNextPage);
             const logs = response.data.logs;
-            console.log(logs.data);
-            console.log(response);
+            
             if (response.status === 1) {
                 setLinkNextPage(logs.next_page_url);
                 setHasMore(response.data.has_more);
@@ -427,7 +425,6 @@ export default function DataTable() {
         try {
             const ResultProcess = await getControllById(id);
             const data = ResultProcess.data;
-            console.log(data);
 
             
             const timeConfigs = [
@@ -437,9 +434,8 @@ export default function DataTable() {
             ];
 
             
-            console.log(Array<any>(timeConfigs[0]));
-            console.log(timeConfigs[0].length === undefined ? Array<any>(timeConfigs[0]) : timeConfigs[0]);
-            console.log(timeConfigs);
+            
+
             const status =
                 timeConfigs.some((row: any[]) =>
                     row.some(
@@ -448,13 +444,13 @@ export default function DataTable() {
                             timeConfig.value !== 0
                     )
                 ) ||
-                timeConfigs.every((row: any[]) =>
-                    row.every((timeConfig: any) => timeConfig.value === 0)
-                )
+                (data.logs === null
+                    ? 2
+                    : timeConfigs.every((row: any[]) =>
+                          row.every((timeConfig: any) => timeConfig.value === 0)
+                      )
                     ? 3
-                    : data.logs && data.logs.length > 0
-                    ? data.logs[0].success
-                    : 2;
+                    : data.logs[0].success);
 
             configTables = {
                 id: data.id,
@@ -468,7 +464,6 @@ export default function DataTable() {
                 interval_description: timeConfigs,
             };
 
-            console.log(configTables);
             return { configTables, timeConfigs };
         } catch (error) {
             console.error('Erro ao buscar controle:', error);
@@ -571,7 +566,7 @@ export default function DataTable() {
             // Busca os dados do card
 
             const { configTables, timeConfigs } = await fetchCardData(id);
-                        console.log('haum?');
+       
 
             setDataTable(configTables);
 

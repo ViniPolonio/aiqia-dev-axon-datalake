@@ -98,14 +98,12 @@ export function CreateTimeForm({shouldGetData}: CreateTimeFormProps) {
             try {
                 const response = await getControlConfig();
                 const data = response.data;
-                // const result = data.data;
-                // console.log(data);
+                
                 
                 const configTables = data.data.map((item: any) => ({
                     id: item.config_data.id,
                     process_name: item.config_data.process_name,
                 }));
-                // console.log(configTables);
                 setConfigTables(configTables);
             } catch (error) {
                 console.error(error);

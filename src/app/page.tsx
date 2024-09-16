@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { CardWithData } from "./CardWithData/CardWithData";
-import React, { useCallback, useEffect, useState } from "react";
-import { SearchAndFilter } from "./SearchAndFilter/SearchAndFilter";
-import { ModeToggle } from "@/components/ui/ModeToggle";
-import { AddButton } from "@/components/botoes/AddButton/AddButton";
-import { getControlConfig } from "@/app/services/controlConfig";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
-import Autoplay from "embla-carousel-autoplay";
+import { CardWithData } from './CardWithData/CardWithData';
+import React, { useCallback, useEffect, useState } from 'react';
+import { SearchAndFilter } from './SearchAndFilter/SearchAndFilter';
+import { ModeToggle } from '@/components/ui/ModeToggle';
+import { AddButton } from '@/components/botoes/AddButton/AddButton';
+import { getControlConfig } from '@/app/services/controlConfig';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
+import Autoplay from 'embla-carousel-autoplay';
 
 import {
     Carousel,
@@ -16,9 +16,9 @@ import {
     CarouselItem,
     CarouselNext,
     CarouselPrevious,
-} from "@/components/ui/carousel";
-import { PauseIcon, PlayIcon } from "lucide-react";
-import StartPauseButton from "@/components/botoes/StartPauseButton/StartPauseButton";
+} from '@/components/ui/carousel';
+import { PauseIcon, PlayIcon } from 'lucide-react';
+import StartPauseButton from '@/components/botoes/StartPauseButton/StartPauseButton';
 
 interface TimeConfigs {
     value: number;
@@ -34,10 +34,10 @@ export type Data = {
     created_at: Date;
     finished_at: Date;
     lastLogs: Array<any>;
-    timeConfigs: Array<TimeConfigs>
+    timeConfigs: Array<TimeConfigs>;
 };
 export default function Home() {
-    const [searchTerm, setSearchTerm] = useState("");
+    const [searchTerm, setSearchTerm] = useState('');
     const [data, setData] = useState<Array<Data>>([]);
     const [loading, setLoading] = useState(true);
 
@@ -55,12 +55,17 @@ export default function Home() {
                 const data = response.data;
 
                 const configTables = data.map((item: any) => {
-                   const timeConfigs = [
-                       item.config_data.intervals.interval_in_minutes,
-                       item.config_data.intervals.interval_in_hours,
-                       item.config_data.intervals.interval_in_days,
-                   ];
-                   console.log(timeConfigs);
+                    console.log({
+                        log: item.logs === null ? true : false,
+                        id: item.config_data.id,
+                    });
+
+                    const timeConfigs = [
+                        item.config_data.intervals.interval_in_minutes,
+                        item.config_data.intervals.interval_in_hours,
+                        item.config_data.intervals.interval_in_days,
+                    ];
+
                     const status =
                         timeConfigs.some((row: any[]) =>
                             row.some(
@@ -69,23 +74,59 @@ export default function Home() {
                                     timeConfig.value !== 0
                             )
                         ) ||
-                        timeConfigs.every((row: any[]) =>
-                            row.every(
-                                (timeConfig: any) => timeConfig.value === 0
-                            )
-                        )
+                        (item.logs === null
+                            ? 2
+                            : timeConfigs.every((row: any[]) =>
+                                  row.every(
+                                      (timeConfig: any) =>
+                                          timeConfig.value === 0
+                                  )
+                              )
                             ? 3
-                            : item.logs && item.logs.length > 0
-                            ? item.logs[0].success
-                            : 2;
+                            : item.logs[0].success);
+                    // const statusTeste =
+                    //     item.logs === null
+                    //         ? timeConfigs.some((row: any[]) =>
+                    //               row.some(
+                    //                   (timeConfig: any) =>
+                    //                       timeConfig.status === 'inactive' &&
+                    //                       timeConfig.value !== 0
+                    //               )
+                    //           )
+                    //             ? 2
+                    //             : item.logs[0].success
+                    //         : 2;
 
-                
+                    // const statusTeste = () => {
+                    //     let timeConfigExists = timeConfigs.some((row: any[]) =>
+                    //         row.some(
+                    //             (timeConfig: any) => timeConfig.value !== 0
+                    //         )
+                    //     );
+                    //     let timeConfigInactive = timeConfigs.some(
+                    //         (row: any[]) =>
+                    //             row.some(
+                    //                 (timeConfig: any) => timeConfig.value === 0
+                    //             )
+                    //     );
+                    //     if (item.logs !== null && timeConfigExists) {
+                    //         if (timeConfigInactive) {
+                    //             return 3;
+                    //         } else {
+                    //             return item.logs[0].success;
+                    //         }
+                    //     } else {
+                    //         return 2;
+                    //     }
+                    // };
+
                     return {
                         id: item.config_data.id,
                         process_name: item.config_data.process_name,
                         active: item.config_data.active,
                         timeConfigs: timeConfigs,
                         status: status,
+                        // status: statusTeste(),
                         created_at: new Date(item.config_data.created_at),
                         finished_at:
                             item.logs === null
@@ -94,10 +135,9 @@ export default function Home() {
                         lastLogs: item.logs === null ? [] : item.logs,
                         interval_description: timeConfigs,
                     };
-                   
-                });
-                
-                
+                }); 
+                console.log(configTables);
+
                 setData((prevData) => {
                     const combinedData = [...prevData];
 
@@ -112,7 +152,6 @@ export default function Home() {
 
                     return combinedData;
                 });
-                
             }
         } catch (error) {
             console.error(error);
@@ -138,14 +177,33 @@ export default function Home() {
         } else {
             autoplay.play();
             setIsPlaying(true);
-            
         }
     }, []);
+    useEffect(() => {
+        let timer: NodeJS.Timeout | null = null;
+
+        if (!isPlaying) {
+            // Se o autoplay estiver pausado, iniciar o timer para 30 segundos
+            timer = setTimeout(() => {
+                const autoplay = plugin.current;
+                if (!autoplay) return;
+
+                autoplay.play();
+                setIsPlaying(true);
+            }, 30000); 
+        }
+
+        // Limpar o timer quando o estado mudar ou o componente desmontar
+        return () => {
+            if (timer) {
+                clearTimeout(timer);
+            }
+        };
+    }, [isPlaying]);
 
     const chanceButtonState = () => {
         const autoplay = plugin.current;
         if (!autoplay) return;
-
 
         if (autoplay.isPlaying()) {
             setIsPlaying(false);
@@ -155,13 +213,15 @@ export default function Home() {
 
     return (
         <main>
-            <div className="flex justify-around p-3 h-1/5">
-                <ModeToggle />
-                <AddButton />
-                <StartPauseButton
-                    functionOnClick={toggleAutoplay}
-                    isPlaying={isPlaying}
-                />
+            <div className="flex justify-between mx-[7vw] pt-3 h-1/5">
+                <div className="flex space-x-4">
+                    <ModeToggle />
+                    <AddButton />
+                    <StartPauseButton
+                        functionOnClick={toggleAutoplay}
+                        isPlaying={isPlaying}
+                    />
+                </div>
                 <SearchAndFilter
                     searchTerm={searchTerm}
                     onSearchChange={(e) => setSearchTerm(e.target.value)}
@@ -171,7 +231,7 @@ export default function Home() {
                 <div className="w-[100vw] flex justify-center h-full">
                     <Carousel
                         opts={{
-                            align: "start",
+                            align: 'start',
                             loop: true,
                         }}
                         className="w-[90vw]  "
@@ -197,11 +257,11 @@ export default function Home() {
                                                   loading={true}
                                                   id={1}
                                                   process_name={
-                                                      "Nome do processo"
+                                                      'Nome do processo'
                                                   }
                                                   date={
                                                       new Date(
-                                                          "01-01-2024 00:00:00"
+                                                          '01-01-2024 00:00:00'
                                                       )
                                                   }
                                                   active={0}

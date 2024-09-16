@@ -30,14 +30,14 @@ export default function StatusGeral({
                     if (active === 1) {
                         switch (status) {
                             case 0:
-                                return 'Failed';
+                                return 'Falha';
                             case 1:
-                                return 'Synchronized';
+                                return 'Sincronizado';
                             default:
-                                return 'Unsynchronized';
+                                return 'Não Sincronizado';
                         }
                     } else {
-                        return 'Inactive';
+                        return 'Inativo';
                     }
                 })()}
             </h1>
