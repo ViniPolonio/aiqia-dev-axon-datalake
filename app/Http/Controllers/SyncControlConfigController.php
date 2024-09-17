@@ -43,16 +43,32 @@ class SyncControlConfigController extends Controller
                     return null;
                 }
 
+                
+                $configTime = $consultTimeConfig->where('sync_control_config_id', $config->id)->first();
+
+                $intervalMinutesId = $configTime['intervals']['interval_in_minutes']['values'][0]['id'] ?? null;
+                $intervalHoursId = $configTime['intervals']['interval_in_hours']['values'][0]['id'] ?? null;
+                $intervalDaysId = $configTime['intervals']['interval_in_days']['values'][0]['id'] ?? null;
+
                 $lastLog = SyncControlLog::where('sync_control_config_id', $config->id)
                     ->whereNotNull('finished_at')
                     ->where('finished_at', '!=', '')
+                    ->when($intervalMinutesId, function($query) use ($intervalMinutesId) {
+                        return $query->where('sync_control_time_config_id', $intervalMinutesId);
+                    })
+                    ->when($intervalHoursId, function($query) use ($intervalHoursId) {
+                        return $query->orWhere('sync_control_time_config_id', $intervalHoursId);
+                    })
+                    ->when($intervalDaysId, function($query) use ($intervalDaysId) {
+                        return $query->orWhere('sync_control_time_config_id', $intervalDaysId);
+                    })
                     ->orderBy('finished_at', 'desc')
                     ->select(['sync_control_config_id', 'success', 'runtime_second', 'finished_at', 'error'])
                     ->first();
-                    
+
                 $logs = SyncControlLog::where('sync_control_config_id', $config->id)
                     ->whereNotNull('finished_at')
-                    ->whereNot('finished_at', '=', null)
+                    ->where('finished_at', '!=', '')
                     ->orderBy('finished_at', 'desc')
                     ->take(20)
                     ->select(['sync_control_config_id', 'success', 'runtime_second', 'finished_at', 'error'])
@@ -60,13 +76,12 @@ class SyncControlConfigController extends Controller
                     ->map(function ($log) {
                         return [
                             'success' => $log->success,
-                            'runtime_second' => Carbon::parse($log->runtime_second)->timestamp,
+                            'runtime_second' => \Carbon\Carbon::parse($log->runtime_second)->timestamp,
                             'finished_at' => $log->finished_at,
                             'error' => $log->error ?? null,
                         ];
                     })
                     ->toArray();
-                $configTime = $consultTimeConfig->where('sync_control_config_id', $config->id)->first();
 
                 $intervals = [
                     'interval_in_minutes' => [],
@@ -95,7 +110,7 @@ class SyncControlConfigController extends Controller
                     $timeDifference = $now->diffInMinutes($finishedAt);
                     $intervalInMinutes = match ($intervalUnit) {
                         'days' => $intervalValue * 1440, // 1 dia = 1440 minutos
-                        'hours' => $intervalValue * 60, // 1 hora = 60 minutos
+                        'hours' => $intervalValue * 60,  // 1 hora = 60 minutos
                         'minutes' => $intervalValue,
                         default => 0,
                     };
