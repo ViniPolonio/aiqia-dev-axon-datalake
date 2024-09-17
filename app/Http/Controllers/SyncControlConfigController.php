@@ -66,9 +66,9 @@ class SyncControlConfigController extends Controller
                     ->select(['sync_control_config_id', 'success', 'runtime_second', 'finished_at', 'error'])
                     ->first();
 
-                $logs = SyncControlLog::where('sync_control_config_id', $config->id)
+                    $logs = SyncControlLog::where('sync_control_config_id', $config->id)
                     ->whereNotNull('finished_at')
-                    ->where('finished_at', '!=', '')
+                    ->whereNot('finished_at', '=', null)
                     ->orderBy('finished_at', 'desc')
                     ->take(20)
                     ->select(['sync_control_config_id', 'success', 'runtime_second', 'finished_at', 'error'])
@@ -76,7 +76,7 @@ class SyncControlConfigController extends Controller
                     ->map(function ($log) {
                         return [
                             'success' => $log->success,
-                            'runtime_second' => \Carbon\Carbon::parse($log->runtime_second)->timestamp,
+                            'runtime_second' => Carbon::parse($log->runtime_second)->timestamp,
                             'finished_at' => $log->finished_at,
                             'error' => $log->error ?? null,
                         ];
