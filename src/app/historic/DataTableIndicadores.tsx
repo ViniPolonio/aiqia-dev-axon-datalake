@@ -184,27 +184,27 @@ export const columns: ColumnDef<Indicadores>[] = [
             return <div className="lowercase">{formattedDate}</div>;
         },
     },
-    {
-        accessorKey: "created_at",
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="ghost"
-                    onClick={() =>
-                        column.toggleSorting(column.getIsSorted() === "asc")
-                    }
-                >
-                    Data de Criação
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-            );
-        },
-        cell: ({ row }) => {
-            const date = row.getValue("created_at") as Date;
-            const formattedDate = format(date, "dd/MM/yyyy HH:mm:ss");
-            return <div className="lowercase">{formattedDate}</div>;
-        },
-    },
+    // {
+    //     accessorKey: "created_at",
+    //     header: ({ column }) => {
+    //         return (
+    //             <Button
+    //                 variant="ghost"
+    //                 onClick={() =>
+    //                     column.toggleSorting(column.getIsSorted() === "asc")
+    //                 }
+    //             >
+    //                 Data de Criação
+    //                 <ArrowUpDown className="ml-2 h-4 w-4" />
+    //             </Button>
+    //         );
+    //     },
+    //     cell: ({ row }) => {
+    //         const date = row.getValue("created_at") as Date;
+    //         const formattedDate = format(date, "dd/MM/yyyy HH:mm:ss");
+    //         return <div className="lowercase">{formattedDate}</div>;
+    //     },
+    // },
 
     {
         accessorKey: "runtime_second",
@@ -845,7 +845,7 @@ export default function DataTable() {
                                                         colSpan={columns.length}
                                                         className="h-24 text-center"
                                                     >
-                                                        Sem resultados
+                                                        {isGettingMoreData ? "Carregando..." : "Sem resultados"}
                                                     </TableCell>
                                                 </TableRow>
                                             )}
