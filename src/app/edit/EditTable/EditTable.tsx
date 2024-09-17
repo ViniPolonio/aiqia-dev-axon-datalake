@@ -65,7 +65,6 @@ export default function EditTable({ process_name }: EditTableProps) {
     React.useEffect(() => {
         const path = window.location.pathname;
         const extractedId = path.split("/").pop();
-        console.log(extractedId);
         
         if (extractedId == null) {
             console.error("ID não encontrado na URL");

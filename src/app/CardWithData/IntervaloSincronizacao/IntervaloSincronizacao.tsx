@@ -215,7 +215,7 @@ export default function IntervaloSincronizacao({
                                                                                 <CardDescription>
                                                                                     {formatStatus(
                                                                                         item.status
-                                                                                    ) + ' ' + index}
+                                                                                    )}
                                                                                 </CardDescription>
                                                                             </Card>
                                                                         </li>

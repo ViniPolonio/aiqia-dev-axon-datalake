@@ -9,7 +9,6 @@ async function getControlConfig(nextCursor) {
                 cursor: nextCursor
             }
         });
-        console.log(response)
         return response;
     } catch (error) {
         console.error("Error geting configs: ", error);
@@ -23,7 +22,6 @@ async function storeControllConfig(controllData){
             "sync-control-config",
             controllData
         );
-        console.log(response)
         return response;
     } catch (error) {
         console.error("Erro store configs: ", error);
@@ -34,7 +32,6 @@ async function storeControllConfig(controllData){
 async function getControllById(id) {
     try {
         const response = await controlConfig.get(`sync-control-config/${id}`);
-        console.log(response)
         return response.data;
     } catch (error) {
         console.error("Error geting the config: ", error);
@@ -57,7 +54,6 @@ async function powerButton(active, id) {
 
 async function editControllConfig(id, controllData) {
     try {
-        console.log(controllData);
         const response = await controlConfig.put(
             `sync-control-config/${id}`,
              controllData 

@@ -21,7 +21,6 @@ export default function EditForm() {
                 const result = await getControlTimeById(extractedId);
                 const data = result.message;
                 setAllDates(data || []);
-                console.log(data);
             } catch (error) {
                 console.error('Erro ao buscar dados:', error);
                 setAllDates([]);
@@ -40,7 +39,7 @@ export default function EditForm() {
                 <EditTable />
             </div>
 
-            <div className="p-2 flex flex-row flex-wrap justify-between">
+            <div className="p-2 flex flex-row flex-wrap justify-evenly">
                 {loading ? (
                     <h1>carregando...</h1>
                 ) : (

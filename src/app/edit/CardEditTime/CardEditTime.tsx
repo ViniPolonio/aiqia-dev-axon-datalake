@@ -115,7 +115,7 @@ export function CardEditTime({ date, onSave }: CardEditTimeProps) {
                                                 <DialogDescription className="text-[1rem] text-left">
                                                     Intervalo de sincronização:{' '}
                                                 </DialogDescription>
-                                                <CardTitle className="text-[1rem] relative z-0 flex self-center justify-self-center truncate pr-3">
+                                                <CardTitle className="text-[1rem] relative z-0 flex self-center justify-self-center truncate pr-4">
                                                     {date.interval_value}{' '}
                                                     {date.interval_type
                                                         ? intervalType(

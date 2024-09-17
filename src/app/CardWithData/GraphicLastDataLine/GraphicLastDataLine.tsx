@@ -75,10 +75,10 @@ export function GraphicLastDataLine({
                 accessibilityLayer
                 data={chartData}
                 margin={{
-                    top: 15,
-                    left: 10,
-                    right: 10,
-                    bottom: 10,
+                    top: 25,
+                    left: 15,
+                    right: 15,
+                    bottom: 20,
                 }}
             >
                 <CartesianGrid vertical={false} />

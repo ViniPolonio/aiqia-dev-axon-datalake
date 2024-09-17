@@ -1,7 +1,7 @@
 'use client';
 
 import { CardWithData } from './CardWithData/CardWithData';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { SearchAndFilter } from './SearchAndFilter/SearchAndFilter';
 import { ModeToggle } from '@/components/ui/ModeToggle';
 import { AddButton } from '@/components/botoes/AddButton/AddButton';
@@ -36,17 +36,30 @@ export type Data = {
     lastLogs: Array<any>;
     timeConfigs: Array<TimeConfigs>;
 };
+
+const waitForMouseLeave = (element: HTMLElement): Promise<void> => {
+    return new Promise((resolve) => {
+        const handleMouseLeave = () => {
+            element.removeEventListener('mouseleave', handleMouseLeave);
+            resolve();
+        };
+
+        element.addEventListener('mouseleave', handleMouseLeave);
+    });
+};
 export default function Home() {
     const [searchTerm, setSearchTerm] = useState('');
     const [data, setData] = useState<Array<Data>>([]);
     const [loading, setLoading] = useState(true);
+    const carouselContentRef = useRef<HTMLDivElement | null>(null);
+    const [reload, setReload] = useState(false);
 
     const plugin = React.useRef(
-        Autoplay({ delay: 3000, stopOnInteraction: true, playOnInit: false })
+        Autoplay({ delay: 10000, stopOnInteraction: true, playOnInit: false })
     );
     const [isPlaying, setIsPlaying] = useState(false);
 
-    const fetchData = async (nextCursor = null) => {
+    const fetchData = async () => {
         setLoading(true);
         try {
             const request = await getControlConfig();
@@ -55,10 +68,7 @@ export default function Home() {
                 const data = response.data;
 
                 const configTables = data.map((item: any) => {
-                    console.log({
-                        log: item.logs === null ? true : false,
-                        id: item.config_data.id,
-                    });
+                    
 
                     const timeConfigs = [
                         item.config_data.intervals.interval_in_minutes,
@@ -66,67 +76,56 @@ export default function Home() {
                         item.config_data.intervals.interval_in_days,
                     ];
 
-                    const status =
-                        timeConfigs.some((row: any[]) =>
-                            row.some(
-                                (timeConfig: any) =>
-                                    timeConfig.status === 'inactive' &&
-                                    timeConfig.value !== 0
-                            )
-                        ) ||
-                        (item.logs === null
-                            ? 2
-                            : timeConfigs.every((row: any[]) =>
-                                  row.every(
-                                      (timeConfig: any) =>
-                                          timeConfig.value === 0
-                                  )
-                              )
-                            ? 3
-                            : item.logs[0].success);
-                    // const statusTeste =
-                    //     item.logs === null
-                    //         ? timeConfigs.some((row: any[]) =>
-                    //               row.some(
+                    // const status =
+                    //     timeConfigs.some((row: any[]) =>
+                    //         row.some(
+                    //             (timeConfig: any) =>
+                    //                 timeConfig.status === 'inactive' &&
+                    //                 timeConfig.value !== 0
+                    //         )
+                    //     ) ||
+                    //     (item.logs === null
+                    //         ? 2
+                    //         : timeConfigs.every((row: any[]) =>
+                    //               row.every(
                     //                   (timeConfig: any) =>
-                    //                       timeConfig.status === 'inactive' &&
-                    //                       timeConfig.value !== 0
+                    //                       timeConfig.value === 0
                     //               )
                     //           )
-                    //             ? 2
-                    //             : item.logs[0].success
-                    //         : 2;
+                    //         ? 3
+                    //         : item.logs[0].success);
 
-                    // const statusTeste = () => {
-                    //     let timeConfigExists = timeConfigs.some((row: any[]) =>
-                    //         row.some(
-                    //             (timeConfig: any) => timeConfig.value !== 0
-                    //         )
-                    //     );
-                    //     let timeConfigInactive = timeConfigs.some(
-                    //         (row: any[]) =>
-                    //             row.some(
-                    //                 (timeConfig: any) => timeConfig.value === 0
-                    //             )
-                    //     );
-                    //     if (item.logs !== null && timeConfigExists) {
-                    //         if (timeConfigInactive) {
-                    //             return 3;
-                    //         } else {
-                    //             return item.logs[0].success;
-                    //         }
-                    //     } else {
-                    //         return 2;
-                    //     }
-                    // };
+                    const statusTeste = () => {
+                        let timeConfigExists = timeConfigs.some((row: any[]) =>
+                            row.some(
+                                (timeConfig: any) => timeConfig.value !== 0
+                            )
+                        );
+                        let timeConfigInactive = timeConfigs.some(
+                            (row: any[]) =>
+                                row.some(
+                                    (timeConfig: any) => timeConfig.value !== 0 &&
+                                     timeConfig.status === 'inactive'
+                                )
+                        );
 
+                        if (item.logs !== null && timeConfigExists) {
+                            if (timeConfigInactive) {
+                                return 3;
+                            } else {
+                                return item.logs[0].success;
+                            }
+                        } else {
+                            return 2;
+                        }
+                    };
                     return {
                         id: item.config_data.id,
                         process_name: item.config_data.process_name,
                         active: item.config_data.active,
                         timeConfigs: timeConfigs,
-                        status: status,
-                        // status: statusTeste(),
+                        // status: status,
+                        status: statusTeste(),
                         created_at: new Date(item.config_data.created_at),
                         finished_at:
                             item.logs === null
@@ -136,22 +135,22 @@ export default function Home() {
                         interval_description: timeConfigs,
                     };
                 }); 
-                console.log(configTables);
 
-                setData((prevData) => {
-                    const combinedData = [...prevData];
+                // setData((prevData) => {
+                //     const combinedData = [...prevData];
 
-                    configTables.forEach((newItem: Data) => {
-                        const exists = combinedData.some(
-                            (item) => item.id === newItem.id
-                        );
-                        if (!exists) {
-                            combinedData.push(newItem);
-                        }
-                    });
+                //     configTables.forEach((newItem: Data) => {
+                //         const exists = combinedData.some(
+                //             (item) => item.id === newItem.id
+                //         );
+                //         if (!exists) {
+                //             combinedData.push(newItem);
+                //         }
+                //     });
 
-                    return combinedData;
-                });
+                //     return combinedData;
+                // });
+                setData(configTables);
             }
         } catch (error) {
             console.error(error);
@@ -161,13 +160,25 @@ export default function Home() {
     };
     useEffect(() => {
         fetchData();
+
+        const interval = setInterval(() => {
+            setReload((prev) => !prev); // Alterna o estado booleano a cada 2 minutos
+        }, 120000);
+
+        // Limpa o intervalo quando o componente desmonta
+        return () => clearInterval(interval);
     }, []);
+    useEffect(() => {
+        // Sempre que a variável `reload` mudar, chama `fetchData`
+        fetchData();
+
+    }, [reload]);
 
     const filteredData = data.filter((item) =>
         item.process_name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const toggleAutoplay = useCallback(() => {
+    const toggleAutoplay = useCallback( () => {
         const autoplay = plugin.current;
         if (!autoplay) return;
 
@@ -182,15 +193,18 @@ export default function Home() {
     useEffect(() => {
         let timer: NodeJS.Timeout | null = null;
 
-        if (!isPlaying) {
+        if (!isPlaying && carouselContentRef.current) {
             // Se o autoplay estiver pausado, iniciar o timer para 30 segundos
-            timer = setTimeout(() => {
-                const autoplay = plugin.current;
-                if (!autoplay) return;
 
-                autoplay.play();
-                setIsPlaying(true);
-            }, 30000); 
+            waitForMouseLeave(carouselContentRef.current).then(() => {
+                timer = setTimeout(() => {
+                    const autoplay = plugin.current;
+                    if (!autoplay) return;
+
+                    autoplay.play();
+                    setIsPlaying(true);
+                }, 30000); // Espera 30 segundos após o mouse sair
+            });
         }
 
         // Limpar o timer quando o estado mudar ou o componente desmontar
@@ -200,6 +214,8 @@ export default function Home() {
             }
         };
     }, [isPlaying]);
+
+    
 
     const chanceButtonState = () => {
         const autoplay = plugin.current;
@@ -240,6 +256,7 @@ export default function Home() {
                         <CarouselContent
                             className=" p-3"
                             onPointerDown={chanceButtonState}
+                            ref={carouselContentRef}
                         >
                             {loading
                                 ? Array.from({

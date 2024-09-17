@@ -129,7 +129,6 @@ export default function EditTime({ data, onSave }: EditTimeProps) {
            },
        });
     async function onSubmit(values: z.infer<typeof formSchema>) {
-        console.log(values);
         setIsSubmitting(true);
         try {
             await form.trigger();

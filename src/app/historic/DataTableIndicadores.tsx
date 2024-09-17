@@ -388,12 +388,15 @@ export default function DataTable() {
         setIsGettingMoreData(true);
 
         try {
+
+                
+            
             const response = await nextPage(linkNextPage);
-            const logs = response.data.logs;
+            const logs = response.logs;
             
             if (response.status === 1) {
                 setLinkNextPage(logs.next_page_url);
-                setHasMore(response.data.has_more);
+                setHasMore(response.has_more);
                 indicadoresData = logs.data.map((log: any) => ({
                     id: log.id,
                     sync_control_time_config_id:
@@ -419,7 +422,6 @@ export default function DataTable() {
     };
     // Função para buscar e configurar os dados do Card
     const fetchCardData = async (id: string) => {
-        let timeConfigs: any[] = [];
         let configTables: Data;
 
         try {
@@ -428,30 +430,31 @@ export default function DataTable() {
 
             
             const timeConfigs = [
-                data.interval_in_minutes.length === undefined ? Array<any>(data.interval_in_minutes) : data.interval_in_minutes,
-                data.interval_in_hours.length === undefined ? Array<any>(data.interval_in_hours) : data.interval_in_hours,
-                data.interval_in_days.length === undefined ? Array<any>(data.interval_in_days) : data.interval_in_days,
+                
+                data.intervals.interval_in_minutes ,
+                data.intervals.interval_in_hours,
+                data.intervals.interval_in_days ,
             ];
+              
+            
+
+            // const status =
+            //     timeConfigs.some((row: any[]) =>
+            //         row.some(
+            //             (timeConfig: any) =>
+            //                 timeConfig.status === 'inactive' &&
+            //                 timeConfig.value !== 0
+            //         )
+            //     ) ||
+            //     (data.logs === null
+            //         ? 2
+            //         : timeConfigs.every((row: any[]) =>
+            //               row.every((timeConfig: any) => timeConfig.value === 0)
+            //           )
+            //         ? 3
+            //         : data.logs[0].success);
 
             
-            
-
-            const status =
-                timeConfigs.some((row: any[]) =>
-                    row.some(
-                        (timeConfig: any) =>
-                            timeConfig.status === 'inactive' &&
-                            timeConfig.value !== 0
-                    )
-                ) ||
-                (data.logs === null
-                    ? 2
-                    : timeConfigs.every((row: any[]) =>
-                          row.every((timeConfig: any) => timeConfig.value === 0)
-                      )
-                    ? 3
-                    : data.logs[0].success);
-
             configTables = {
                 id: data.id,
                 usyncronized: true,
@@ -463,6 +466,7 @@ export default function DataTable() {
                 finished_at: new Date(0),
                 interval_description: timeConfigs,
             };
+
 
             return { configTables, timeConfigs };
         } catch (error) {
@@ -481,40 +485,48 @@ export default function DataTable() {
 
         try {
             const Result = await getLogsById(id);
-            console.log(Result);
 
-            const { logs, has_more } = Result.data;
+            const data = Result.logs;
+            const has_more = Result.has_more;
+            
 
-            setLinkNextPage(logs.next_page_url);
+            setLinkNextPage(Result.logs.next_page_url);
             setHasMore(has_more);
 
             if (Result.status === 1) {
-                const status =
-                    timeConfigs.some((row: any[]) =>
+                const statusTeste = () => {
+                    let timeConfigExists = timeConfigs.some((row: any[]) =>
+                        row.some((timeConfig: any) => timeConfig.value !== 0)
+                    );
+                    let timeConfigInactive = timeConfigs.some((row: any[]) =>
                         row.some(
                             (timeConfig: any) =>
-                                timeConfig.status === 'inactive' &&
-                                timeConfig.value !== 0
+                                timeConfig.value !== 0 &&
+                                timeConfig.status === 'inactive'
                         )
-                    ) ||
-                    timeConfigs.every((row: any[]) =>
-                        row.every((timeConfig: any) => timeConfig.value === 0)
-                    )
-                        ? 3
-                        : logs && logs.length > 0
-                        ? logs[0].success
-                        : 2;
+                    );
+
+                    if (data !== null && timeConfigExists) {
+                        if (timeConfigInactive) {
+                            return 3;
+                        } else {
+                            return data.data[0].success;
+                        }
+                    } else {
+                        return 2;
+                    }
+                };
                 configTables = {
                     ...configTables,
                     usyncronized: false,
                     finished_at:
-                        logs.data.length === 0
+                        data.length === 0
                             ? new Date(0)
-                            : new Date(logs.data[0].finished_at),
-                    status: status,
+                            : new Date(data.data[0].finished_at),
+                    status: statusTeste(),
                 };
 
-                indicadoresData = logs.data.map((log: any) => ({
+                indicadoresData = data.data.map((log: any) => ({
                     id: log.id,
                     sync_control_time_config_id:
                         log.sync_control_time_config_id,
@@ -537,9 +549,7 @@ export default function DataTable() {
                     };
                 });
 
-                console.log(updatedLastElements);
                 setDataTable(configTables);
-                console.log(configTables);
                 setLastLogs(updatedLastElements);
                 if (indicadoresData.length > 0) {
                     setLogs(indicadoresData);
@@ -570,7 +580,6 @@ export default function DataTable() {
 
             setDataTable(configTables);
 
-            console.log('comoasim?');
             // Busca os logs e atualiza os dados do card e logs
             await fetchLogsData(id, configTables, timeConfigs);
         } catch (error) {
@@ -643,7 +652,6 @@ export default function DataTable() {
 
     React.useEffect(() => {
         if (dateRange?.from && dateRange?.to) {
-            console.log(logs[1].finished_at);
             const filtered = logs.filter((log) => {
                 const finished_at = new Date(log.finished_at);
                 return dateRange.from != undefined && dateRange.to != undefined
@@ -656,7 +664,6 @@ export default function DataTable() {
             setFilteredLogs(logs);
         }
     }, [dateRange, logs]);
-    console.log(dataTable?.status);
 
     return (
         <div className="w-4/5">
@@ -711,7 +718,18 @@ export default function DataTable() {
             ) : (
                 <div>
                     <div className="flex justify-center items-center py-4">
-                        <DatePickerWithRange onDateChange={setDateRange} />
+                        <div className="flex justify-evenly w-full">
+                            <DatePickerWithRange onDateChange={setDateRange} />
+                            {logs.length > 20 && <Button
+                                size="sm"
+                                onClick={getData}
+                                disabled={isLoadingData}
+                            >
+                                {' '}
+                                Recarregar dados
+                            </Button>}
+                        </div>
+
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild></DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
@@ -855,14 +873,14 @@ export default function DataTable() {
                                                     'Nao tem mais logs'
                                                 )}
                                             </Button>
-                                            <Button
+                                            {!hasMore && <Button
                                                 size="sm"
                                                 onClick={getData}
                                                 disabled={isLoadingData}
                                             >
                                                 {' '}
                                                 Recarregar dados
-                                            </Button>
+                                            </Button>}
                                         </div>
                                     </div>
                                 </ScrollArea>
